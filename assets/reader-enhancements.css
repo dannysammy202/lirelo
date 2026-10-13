@@ -1,5 +1,12 @@
 /* Lirelo reading enhancements: offline status, fullscreen focus, landscape layout. */
 #rrOfflineSave[data-state="saved"]{color:#376C56;background:#E7F2E9}
+#rrOfflineSave[data-state="saving"]{width:auto;min-width:63px;padding:0 7px;gap:3px}
+#rrOfflineSave[data-state="saving"] svg{height:15px;width:15px}
+#rrOfflineSave[data-state="saving"]::after{content:attr(data-progress);font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#rrOfflineSave[data-state="saved"]{width:auto;padding:0 8px;gap:4px}
+#rrOfflineSave[data-state="saved"]::after{content:"Saved";font-size:10px;font-weight:650}
+#rrOfflineSave[data-state="saved"] svg{height:14px;width:14px}
+
 #rrOfflineSave[data-state="saving"]{color:#67507F;background:#EEE8F4;min-width:35px}
 .rr-offline-control,.rr-fullscreen-control{flex-shrink:0}
 .reader-screen.rr-immersive{position:fixed!important;inset:0;z-index:5000;width:100vw;height:100dvh;max-height:100dvh}
