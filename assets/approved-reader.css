@@ -170,8 +170,9 @@
  #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-page-img,
  #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-text-layer,
  #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-markers{display:none!important}
+ .acr-flow-text{display:none!important}
  #app.reader-open .reader-screen.acr-enabled.acr-reflow .acr-flow-text{
-   display:block;color:#24212B;background:#FFFEFC;
+   display:block!important;color:#24212B;background:#FFFEFC;
    padding:25px 22px 29px;font-family:Georgia,'Times New Roman',serif;
    font-size:var(--acr-reading-size,18px);line-height:1.62;white-space:normal;overflow-wrap:break-word;
  }
