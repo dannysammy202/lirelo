@@ -115,11 +115,29 @@ async function saveOffline(){
   for(let n=1;n<=doc.pages;n++){
    if(task.cancelled||!state.active||state.book!==book||window.LireloApp?.user?.id!==uid)break;
    if(await window.LireloOffline.getPage(doc,n,uid))continue;
-   await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original'));
-   saved++;
+   let downloaded=false;
+   try{
+    const batch=await window.LireloApp.request('batch?id='+encodeURIComponent(doc.id)+'&start='+n+'&count='+Math.min(3,doc.pages-n+1)+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original'));
+    if(!Array.isArray(batch.pages)||!batch.pages.length)throw new Error('Empty download batch');
+    for(const data of batch.pages){
+     if(task.cancelled||window.LireloApp?.user?.id!==uid)break;
+     if(!await window.LireloOffline.getPage(doc,data.page,uid)){
+      await window.LireloOffline.savePage(doc,data.page,data,uid);
+      saved++;
+     }
+    }
+    downloaded=true;
+   }catch(e){
+    if(e?.name==='QuotaExceededError')throw new Error('Device storage is full. Free some space and resume the download.');
+    // Older deployments and oversized scanned pages fall back to a single page.
+    await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original'));
+    if(!await window.LireloOffline.getPage(doc,n,uid))throw new Error('Unable to store page '+n+' for offline use.');
+    saved++;
+   }
    setOfflineLabel(saved+'/'+doc.pages,'Downloading '+saved+' of '+doc.pages+' pages. Click to pause.','saving');
    await new Promise(resolve=>setTimeout(resolve,20));
   }
+  saved=await window.LireloOffline.pageCount(doc,uid);
   if(saved>=doc.pages)toast('Book saved for offline reading.');
   else if(task.cancelled)toast('Download paused. Click Save offline to resume.');
  }catch(e){toast('Offline download stopped: '+e.message)}
