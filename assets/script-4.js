@@ -60,7 +60,7 @@ function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()
     state.annotations.bookmarks=[{id:'sample-b1',page:5,title:'Reading for understanding',chapter:'Reading for understanding',created:1730000001000}];
   }
 }}
-function updateMeta(){if(!state.doc)return;
+function updateMeta(){if(!state.doc)return;updateFullscreenPage();
  $('#rrBookTitle').textContent=state.book.title;$('#rrBookSubtitle').textContent=`${state.book.author} · ${state.doc.format.toUpperCase()} · your document`;
  $('#rrBookFormat').textContent=state.doc.format.toUpperCase();$('#rrLeftTitle').textContent=state.book.title;
  $('#rrPageLabel').textContent=displayPage();$('#rrPageBottom').textContent=`Page ${state.page} of ${state.doc.pages}`;
@@ -173,6 +173,21 @@ function close({showDetails=true}={}){
  else{$('.content-width').classList.remove('hidden')}
 }
 function back(){if(!state.active)return;const id=state.book?.id;history.replaceState({lireloBook:id},'',`#book=${encodeURIComponent(id)}`);close()}
+const immersiveHud=document.createElement('nav');
+immersiveHud.id='rrImmersiveHud';
+immersiveHud.className='rr-immersive-hud';
+immersiveHud.setAttribute('aria-label','Fullscreen reading controls');
+immersiveHud.innerHTML='<button type="button" id="rrFocusPrev" aria-label="Previous page" title="Previous page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><span id="rrFocusPage" aria-live="off">1 / 1</span><button type="button" id="rrFocusNext" aria-label="Next page" title="Next page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button><span class="rr-immersive-divider" aria-hidden="true"></span><button type="button" id="rrFocusExit" aria-label="Exit fullscreen reading" title="Exit fullscreen reading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h6V3m12 6h-6V3M3 15h6v6m12-6h-6v6"/></svg></button>';
+screen.appendChild(immersiveHud);
+$('#rrFocusPrev').addEventListener('click',()=>jump(state.page-1));
+$('#rrFocusNext').addEventListener('click',()=>jump(state.page+1));
+$('#rrFocusExit').addEventListener('click',()=>toggleFullscreen());
+function updateFullscreenPage(){
+ if(!state.doc)return;
+ $('#rrFocusPage').textContent=displayPage();
+ $('#rrFocusPrev').disabled=state.page<=1;
+ $('#rrFocusNext').disabled=state.page>=state.doc.pages;
+}
 function updateFullscreenButton(){
  const on=screen.classList.contains('rr-immersive'),button=$('#rrFullscreen');
  button.setAttribute('aria-pressed',String(on));
@@ -186,7 +201,9 @@ async function toggleFullscreen(){
   screen.classList.remove('rr-immersive');
  }else{
   screen.classList.remove('panel-open');
+  $('#rrSettings').classList.add('hidden');$('#rrSearchbar').classList.add('hidden');$('#rrQuickJump').classList.add('hidden');$('#rrSelectBar').classList.add('hidden');
   screen.classList.add('rr-immersive');
+  updateFullscreenPage();
   if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen().catch(()=>{});
  }
  updateFullscreenButton();
