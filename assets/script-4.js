@@ -84,6 +84,7 @@ function updateMeta(){if(!state.doc)return;updateFullscreenPage();
  $('#rrFontSize').value=state.font;$('#rrFontValue').textContent=state.font+' pt';$('#rrPageTone').value=state.tone;$('#rrFontFace').value=state.fontFace;
  $('#rrZoomOut').disabled=state.zoom<=75;$('#rrZoomIn').disabled=state.zoom>=(phone()?300:175);$('#rrPrevious').disabled=state.page<=1;$('#rrNext').disabled=state.page>=state.doc.pages;
  screen.classList.toggle('rr-phone-zoom',phone()&&state.doc.format==='pdf'&&state.zoom>100);
+ screen.classList.toggle('rr-phone-epub',phone()&&state.doc.layout==='mobile');
  canvas.style.setProperty('--rr-zoom',state.zoom/100);canvas.style.setProperty('--rr-base',Math.max(260,Math.min(small()?620:650,canvas.clientWidth-(small()?16:48)))+'px');canvas.dataset.tone=state.tone;canvas.dataset.mode=state.mode;
  const saved=state.annotations.bookmarks.some(b=>b.page===state.page);$('#rrBookmark').setAttribute('aria-pressed',String(saved));
  $('#rrJump').max=state.doc.pages;
@@ -292,7 +293,7 @@ $('#rrJumpForm').addEventListener('submit',e=>{e.preventDefault();jump(Number($(
 async function setMode(next){state.mode=next;await initialiseCanvas();updateMeta();persist()}
 $('#rrMode').addEventListener('click',()=>setMode(state.mode==='scroll'?'swipe':'scroll'));
 $('#rrReadingMode').addEventListener('change',e=>setMode(e.target.value));
-function setZoom(n){state.zoom=clamp(n,75,phone()?300:175);updateMeta();persist()}
+function setZoom(n){const prior=state.zoom;state.zoom=clamp(n,75,phone()?300:175);updateMeta();persist();if(phone()&&state.doc?.format==='pdf'){requestAnimationFrame(()=>{if(prior<=100&&state.zoom>100)canvas.scrollLeft=Math.max(0,(canvas.scrollWidth-canvas.clientWidth)/2);if(state.zoom<=100)canvas.scrollLeft=0})}}
 $('#rrZoomOut').addEventListener('click',()=>setZoom(state.zoom-10));$('#rrZoomIn').addEventListener('click',()=>setZoom(state.zoom+10));
 let relayoutToken=0;
 $('#rrFontSize').addEventListener('input',e=>{$('#rrFontValue').textContent=e.target.value+' pt'});
