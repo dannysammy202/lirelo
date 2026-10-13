@@ -241,7 +241,7 @@ function nativeTextForPage(holder,data){
  }
  add();
  const part=holder.querySelector('.rr-page-content');
- if(part)part.append(wrap);
+ if(part){part.append(wrap);holder.classList.add('acr-text-page')}
 }
 function updateNativeText(){
  if(!isReading()||ui.mode!=='reading')return;
