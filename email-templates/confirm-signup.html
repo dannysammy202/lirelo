@@ -1,0 +1,25 @@
+{{ if eq .RedirectTo "https://lirelo-sooty.vercel.app" }}
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Lirelo</title></head>
+<body style="margin:0;padding:0;background:#F7F4EE;color:#27262A;">
+<div style="display:none;font-size:1px;line-height:1px;color:#F7F4EE;max-height:0;max-width:0;opacity:0;overflow:hidden;">Confirm your email address to activate your Lirelo account. Your books, notes and reading progress will have a home of their own.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="width:100%;background:#F7F4EE;"><tr><td align="center" style="padding:45px 18px 40px;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="560" style="width:100%;max-width:560px;">
+<tr><td style="padding:0 4px 24px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:29px;font-weight:700;letter-spacing:-1.4px;color:#4B4363;">lirelo<span style="color:#75678D;">.</span></span></td></tr>
+<tr><td style="background:#FFFCF8;border:1px solid #E8E0E8;border-radius:17px;padding:42px 42px 37px;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+<tr><td><p style="font:700 10px Arial,Helvetica,sans-serif;letter-spacing:2.1px;color:#75678D;margin:0 0 17px;">ONE MORE STEP</p></td></tr>
+<tr><td><h1 style="font:normal 30px/1.25 Georgia,'Times New Roman',serif;letter-spacing:-.6px;color:#34303D;margin:0 0 16px;">Your reading space awaits.</h1></td></tr>
+<tr><td><p style="font:15px/1.8 Arial,Helvetica,sans-serif;color:#655E6A;margin:0;">Confirm your email address to activate your Lirelo account. Your books, notes and reading progress will have a home of their own.</p></td></tr>
+<tr><td style="padding:30px 0 27px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#75678D" style="border-radius:9px;background:#75678D"><a href="{{ .ConfirmationURL }}" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;font-weight:700;text-decoration:none;display:inline-block;padding:15px 26px;color:#FFFFFF;border-radius:9px;">Confirm my email&nbsp;&nbsp;&rarr;</a></td></tr></table></td></tr>
+<tr><td style="border-top:1px solid #ECE6EB;padding-top:22px;"><p style="font:12px/1.65 Arial,Helvetica,sans-serif;color:#8B838E;margin:0;">If you didn’t create a Lirelo account, you can ignore this message.</p></td></tr>
+</table></td></tr>
+<tr><td align="center" style="padding:24px 16px 0;"><p style="font:12px/1.65 Arial,Helvetica,sans-serif;color:#7D7581;margin:0 0 8px;">Lirelo &nbsp;&middot;&nbsp; Your reading, all together.</p><p style="font:11px/1.6 Arial,Helvetica,sans-serif;color:#9C939D;margin:0;">This is an account-related email. No reply is required.</p></td></tr>
+</table></td></tr></table>
+</body></html>
+{{ else }}
+<h2>Confirm your email address</h2>
+<p>Follow the link below to confirm this email address and finish signing up.</p>
+<p><a href="{{ .ConfirmationURL }}">Confirm email address</a></p>
+{{ end }}
