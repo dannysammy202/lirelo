@@ -1,20 +1,25 @@
-# Lirelo deployment readiness
+# Lirelo cloud deployment status
 
-The current full-function Lirelo app uses a local Python HTTP server, SQLite, and files under `data/books`. The approved frontend also keeps reader annotations in browser localStorage.
+GitHub: https://github.com/dannysammy202/lirelo
+Vercel: https://lirelo-sooty.vercel.app
+Supabase project: Struct (`phkejehwadwzxvtjmesq`), shared with Struct's existing app.
 
-Vercel's serverless functions do not provide durable writable filesystem storage. Deploying `server.py` as-is would make imported books, metadata, and annotations unavailable across requests/devices. The app also lacks authentication and user-specific access controls. Do not publish its API on the open internet.
+## Deployed infrastructure
 
-## Source repository
+- Supabase Auth with email/password sign-in, subject to the project's email confirmation policy.
+- Private `lirelo-private` bucket (50 MB file limit), owner-scoped storage policies.
+- `public.lirelo_books`, `public.lirelo_reading_state`, `public.lirelo_profiles`, each protected by per-user RLS policies.
+- Git-connected Vercel Python document API (`/api/inspect`, `/api/meta`, `/api/page`, `/api/reflow`, `/api/search`).
+- Client-side upload, library, progress, annotations and preference synchronisation.
 
-Use a new private GitHub repository. Never commit `data/`, a local SQLite database, any uploaded PDFs/EPUBs, tokens or `.env`. The `.gitignore` in this folder excludes these.
+## Manual configuration / verification
 
-## To reach a working hosted release
+Configure **Supabase Struct > Authentication > URL Configuration** Site URL and Redirect URLs for `https://lirelo-sooty.vercel.app` before new-account confirmation testing.
 
-1. Select persistent storage for PDF/EPUB files (e.g. private object storage).
-2. Select a persistent database to replace SQLite.
-3. Add authentication and authorisation so each reader accesses only their own documents.
-4. Migrate the local Python server endpoints to stateless functions, or host the existing server on a platform with a persistent volume. EPUB reflow and PDF rendering need extra care with execution limits and file size.
-5. Move reader annotations and progress to durable user-scoped records if multi-device syncing is required.
-6. Add production environment variables, deploy, and test PDF/EPUB import/render/search/delete on the hosted site.
+Run the real-user upload, reading and cross-device checks listed in README.md. They have not yet been verified using a real registered account.
 
-The app can continue running locally during this migration using `start-lirelo.cmd`.
+## Security notes
+
+Never commit a service-role key. The client intentionally uses a publishable key; JWT verification and RLS enforce access. PDF/EPUB raw uploads use Supabase Storage instead of Vercel's request body, and serverless rendering requests validate the authenticated user's book ownership.
+
+The other, general-purpose Supabase project has three non-Lirelo tables with RLS disabled and was intentionally **not used**. No existing application tables were changed.
