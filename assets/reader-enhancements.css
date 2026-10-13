@@ -1,0 +1,69 @@
+/* Lirelo reading enhancements: offline status, fullscreen focus, landscape layout. */
+#rrOfflineSave[data-state="saved"]{color:#376C56;background:#E7F2E9}
+#rrOfflineSave[data-state="saving"]{color:#67507F;background:#EEE8F4;min-width:35px}
+.rr-offline-control,.rr-fullscreen-control{flex-shrink:0}
+.reader-screen.rr-immersive{position:fixed!important;inset:0;z-index:5000;width:100vw;height:100dvh;max-height:100dvh}
+#app.reader-open:has(.rr-immersive) .sidebar{display:none!important}
+.reader-screen.rr-immersive .rr-right{display:none!important}
+.reader-screen.rr-immersive .rr-work-area{display:block!important}
+.reader-screen.rr-immersive .rr-centre{width:100%;height:100%}
+.reader-screen.rr-immersive .rr-topbar{height:46px;min-height:46px}
+.reader-screen.rr-immersive .rr-tools{height:40px;min-height:40px}
+.reader-screen.rr-immersive .rr-bottom{display:none}
+.reader-screen.rr-immersive .rr-page-stack{padding-top:16px;padding-bottom:20px}
+.reader-screen.rr-immersive #rrPanelToggle,
+.reader-screen.rr-immersive #rrTocToggle{display:none}
+.reader-screen.rr-immersive #rrFullscreen{background:#E9E2F1;color:#554B70}
+.reader-screen.rr-immersive .rr-document-title small{display:none}
+@media(max-width:900px){
+ .reader-screen .rr-top-actions{gap:1px}
+ .reader-screen .rr-top-actions .rr-icon{width:32px}
+ .reader-screen #rrOfflineSave{order:1}
+ .reader-screen #rrFullscreen{order:2}
+}
+@media(max-width:520px){
+ .reader-screen .rr-document-title strong{max-width:calc(100vw - 260px)}
+ .reader-screen .rr-top-actions #rrHighlightTool,
+ .reader-screen .rr-top-actions #rrAddNote{display:none}
+ .reader-screen .rr-top-actions .rr-icon{width:31px}
+ .reader-screen .rr-topbar{padding-inline:8px}
+}
+/* Tablet and phone landscape: use the short screen for reading, not permanent sidebars. */
+@media (orientation:landscape) and (max-width:1180px), (orientation:landscape) and (max-height:640px){
+ #app.reader-open .sidebar{display:none!important}
+ #app.reader-open{display:block}
+ #app.reader-open .workspace{height:100dvh;min-height:0}
+ #app.reader-open .main-content{height:100dvh!important;overflow:hidden}
+ .reader-screen{height:100dvh;max-height:100dvh}
+ .reader-screen .rr-topbar{height:42px;min-height:42px;padding-inline:10px;gap:5px}
+ .reader-screen .rr-document-title strong{max-width:clamp(96px,25vw,290px);font-size:11px}
+ .reader-screen .rr-document-title small{display:none}
+ .reader-screen .rr-document-type{padding:4px}
+ .reader-screen .rr-top-actions{gap:0}
+ .reader-screen .rr-top-actions .rr-icon{width:33px;height:32px}
+ .reader-screen .rr-work-area{display:block!important;position:relative}
+ .reader-screen .rr-centre{width:100%;height:100%}
+ .reader-screen .rr-tools{height:36px;min-height:36px;padding-inline:10px;gap:4px}
+ .reader-screen .rr-tools .rr-icon{width:30px;height:30px}
+ .reader-screen .rr-page-stack{padding:10px 12px 22px;gap:14px}
+ .reader-screen .rr-bottom{height:27px;min-height:27px;padding:2px 14px;gap:0}
+ .reader-screen .rr-bottom .rr-progress,.reader-screen .rr-bottom .rr-bottom-foot{display:none}
+ .reader-screen .rr-page{min-height:0}
+ .reader-screen .rr-right{position:absolute;top:0;right:0;bottom:0;left:auto;width:min(320px,78vw);height:100%;min-height:0;border-radius:10px 0 0 10px;box-shadow:-12px 0 30px #3B354022;transform:translateX(105%);z-index:14;transition:transform .2s}
+ .reader-screen.panel-open .rr-right{transform:translateX(0)}
+ .reader-screen .rr-right .rr-sheet-handle{display:none}
+ .reader-screen .rr-right .rr-sheet-close{display:inline-flex}
+ .reader-screen:not(.panel-open) .rr-right{pointer-events:none}
+ .reader-screen .rr-right-help{display:none}
+ .reader-screen .rr-select-bar{bottom:35px}
+ .reader-screen .rr-floating-settings{top:37px;max-height:calc(100dvh - 48px);overflow:auto}
+ .reader-screen.rr-immersive .rr-right{display:none!important}
+}
+@media (orientation:landscape) and (max-height:500px){
+ .reader-screen .rr-topbar{height:38px;min-height:38px}
+ .reader-screen .rr-tools{height:32px;min-height:32px}
+ .reader-screen .rr-bottom{display:none}
+ .reader-screen .rr-mode-btn{padding:4px}
+ .reader-screen .rr-page-stack{padding-top:7px}
+ .reader-screen .rr-document-type{display:none}
+}
