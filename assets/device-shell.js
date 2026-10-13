@@ -36,6 +36,36 @@ if(actions){
  sheet.addEventListener('click',e=>{const b=e.target.closest('[data-lr-reader-action]');if(!b)return;sheet.hidden=true;more.setAttribute('aria-expanded','false');$(b.dataset.lrReaderAction)?.click()});
  document.addEventListener('click',e=>{if(!sheet.hidden&&!e.target.closest('#lrReaderSheet,#lrReaderMore')){sheet.hidden=true;more.setAttribute('aria-expanded','false')}});
 }
+/* Thumb-reachable controls replace the compressed desktop page toolbar on phones. */
+const mobilePager=document.createElement('nav');
+mobilePager.id='lrMobilePager';
+mobilePager.setAttribute('aria-label','Mobile reading navigation');
+mobilePager.innerHTML=`<button type="button" id="lrMobilePrevious" aria-label="Previous page" title="Previous page">${icon('chevron-left')}</button><button type="button" id="lrMobilePageValue" aria-label="Jump to a page">Page 1</button><button type="button" id="lrMobileNext" aria-label="Next page" title="Next page">${icon('chevron-right')}</button><span class="lr-pager-separator" aria-hidden="true"></span><button type="button" id="lrMobileAdjust" aria-label="Reading display controls" title="Reading display controls">Aa</button>`;
+$('readerScreen').append(mobilePager);
+$('lrMobilePrevious').addEventListener('click',()=>$('rrPrevious')?.click());
+$('lrMobileNext').addEventListener('click',()=>$('rrNext')?.click());
+$('lrMobilePageValue').addEventListener('click',()=>$('rrPageTrigger')?.click());
+$('lrMobileAdjust').addEventListener('click',()=>{
+ const state=window.LireloReader?.state;
+ if(!state?.doc)return;
+ if(state.doc.format==='pdf')window.LireloReader.zoomTo(state.zoom<175?200:100);
+ else $('rrSettingsToggle')?.click();
+});
+function syncMobilePager(){
+ const state=window.LireloReader?.state;
+ if(!state?.doc)return;
+ $('lrMobilePageValue').textContent=state.page+' / '+state.doc.pages;
+ $('lrMobilePrevious').disabled=state.page<=1;
+ $('lrMobileNext').disabled=state.page>=state.doc.pages;
+ const adjust=$('lrMobileAdjust');
+ adjust.textContent=state.doc.format==='pdf'?(state.zoom>100?state.zoom+'%':'Zoom'):'Aa';
+ adjust.title=state.doc.format==='pdf'?'Toggle PDF zoom':'Change EPUB font and reading preferences';
+ adjust.setAttribute('aria-label',adjust.title);
+}
+for(const id of ['rrPageLabel','rrZoomLabel']){
+ const node=$(id);
+ if(node)new MutationObserver(syncMobilePager).observe(node,{characterData:true,childList:true,subtree:true});
+}
 function closeAux(){if(window.LireloFinal?.state?.active)window.LireloFinal.leave();if(window.LireloPhase4?.state?.active)window.LireloPhase4.leave();}
 function libraryHome(){
  closeAux();if(window.LireloReader?.state?.active)window.LireloReader.close({showDetails:false});
