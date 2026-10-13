@@ -47,7 +47,7 @@ async function api(path,opts){
 }
 
 function persist(){if(!state.book||!state.doc)return;try{localStorage.setItem(key(),JSON.stringify({annotations:state.annotations,page:state.page,offset:state.offset,mode:state.mode,zoom:state.zoom,font:state.font,fontFace:state.fontFace,tone:state.tone,tonePinned:state.tonePinned,pages:state.doc.pages,layout:state.doc.layout||'standard'}))}catch(err){if(err?.name==='QuotaExceededError')toast('Browser storage is full. Changes will remain until you close this tab.')}}
-function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const fromStandard=state.doc?.layout==='mobile'&&!raw;let base=null;if(fromStandard){try{base=JSON.parse(localStorage.getItem(standardKey()))}catch{}}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
+function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const fromStandard=state.doc?.layout==='mobile'&&!raw;let base=null;if(fromStandard){try{base=JSON.parse(localStorage.getItem(standardKey()))}catch{}}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,phone()?300:175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
   state.page=state.book.id==='everyday'?4:1;state.offset=0;state.mode='scroll';state.zoom=100;state.font=Number.isFinite(+pref.size)?clamp(+pref.size,10,22):14;state.fontFace=['original','serif','sans'].includes(pref.font)?pref.font:'original';state.mode=pref.mode==='swipe'?'swipe':'scroll';state.tone=initialTone;
   if(state.doc?.layout==='mobile'){
    // Preserve the original desktop positions; mobile reading has a separate pagination.
@@ -82,7 +82,8 @@ function updateMeta(){if(!state.doc)return;updateFullscreenPage();
  const b=lib.state.books.find(b=>b.id===state.book.id);if(b){b.progress=pct;try{localStorage.setItem('lirelo-reader-progress:'+b.id,String(pct))}catch{}window.LireloApp?.updateProgress(b.id,pct);lib.render()}
  $('#rrModeText').textContent=state.mode==='scroll'?'Scroll':'Swipe';$('#rrReadingMode').value=state.mode;
  $('#rrFontSize').value=state.font;$('#rrFontValue').textContent=state.font+' pt';$('#rrPageTone').value=state.tone;$('#rrFontFace').value=state.fontFace;
- $('#rrZoomOut').disabled=state.zoom<=75;$('#rrZoomIn').disabled=state.zoom>=175;$('#rrPrevious').disabled=state.page<=1;$('#rrNext').disabled=state.page>=state.doc.pages;
+ $('#rrZoomOut').disabled=state.zoom<=75;$('#rrZoomIn').disabled=state.zoom>=(phone()?300:175);$('#rrPrevious').disabled=state.page<=1;$('#rrNext').disabled=state.page>=state.doc.pages;
+ screen.classList.toggle('rr-phone-zoom',phone()&&state.doc.format==='pdf'&&state.zoom>100);
  canvas.style.setProperty('--rr-zoom',state.zoom/100);canvas.style.setProperty('--rr-base',Math.max(260,Math.min(small()?620:650,canvas.clientWidth-(small()?16:48)))+'px');canvas.dataset.tone=state.tone;canvas.dataset.mode=state.mode;
  const saved=state.annotations.bookmarks.some(b=>b.page===state.page);$('#rrBookmark').setAttribute('aria-pressed',String(saved));
  $('#rrJump').max=state.doc.pages;
@@ -291,7 +292,7 @@ $('#rrJumpForm').addEventListener('submit',e=>{e.preventDefault();jump(Number($(
 async function setMode(next){state.mode=next;await initialiseCanvas();updateMeta();persist()}
 $('#rrMode').addEventListener('click',()=>setMode(state.mode==='scroll'?'swipe':'scroll'));
 $('#rrReadingMode').addEventListener('change',e=>setMode(e.target.value));
-function setZoom(n){state.zoom=clamp(n,75,175);updateMeta();persist()}
+function setZoom(n){state.zoom=clamp(n,75,phone()?300:175);updateMeta();persist()}
 $('#rrZoomOut').addEventListener('click',()=>setZoom(state.zoom-10));$('#rrZoomIn').addEventListener('click',()=>setZoom(state.zoom+10));
 let relayoutToken=0;
 $('#rrFontSize').addEventListener('input',e=>{$('#rrFontValue').textContent=e.target.value+' pt'});
@@ -379,9 +380,15 @@ let wheelTime=0;
 canvas.addEventListener('wheel',e=>{if(state.mode!=='swipe'||!state.active)return;if(Math.abs(e.deltaX)>Math.abs(e.deltaY)*1.3&&Math.abs(e.deltaX)>15){e.preventDefault();if(Date.now()-wheelTime>280){wheelTime=Date.now();jump(state.page+(e.deltaX>0?1:-1))}}},{passive:false});
 canvas.addEventListener('pointerdown',e=>{if(state.mode!=='swipe'||e.pointerType==='mouse'&&e.button!==0||!state.active)return;state.drag={x:e.clientX,y:e.clientY}});
 canvas.addEventListener('pointerup',e=>{if(!state.drag)return;const dx=e.clientX-state.drag.x,dy=e.clientY-state.drag.y;state.drag=null;if(state.mode==='swipe'&&Math.abs(dx)>75&&Math.abs(dx)>Math.abs(dy)*1.6&&!window.getSelection()?.toString())jump(state.page+(dx<0?1:-1))});
+// Double tap fixed-layout PDFs to enlarge text, while keeping EPUB text selection intact.
+canvas.addEventListener('dblclick',e=>{
+ if(!state.active||!phone()||state.doc?.format!=='pdf'||window.getSelection()?.toString())return;
+ if(!e.target.closest('.rr-page'))return;
+ e.preventDefault();setZoom(state.zoom<175?200:100);
+});
 // In tablet layout the annotations panel remains visible. In mobile layout it starts as a bottom sheet.
 const resize=()=>{if(!state.active)return;if(!small()){$('#rrRightPanel').classList.remove('hidden')}else{screen.classList.remove('panel-open');$('#rrRightPanel').classList.remove('hidden')}};
 window.addEventListener('resize',()=>{resize();if(state.active){updateMeta();if(state.mode==='scroll')requestAnimationFrame(()=>scrollToPage(state.page,state.offset));}});
 Promise.resolve().then(()=>{if(location.hash.startsWith('#reader=')){const id=decodeURIComponent(location.hash.slice(8));window.LireloApp?.ready?.then(()=>open(id,{pushHistory:false}))}});
-window.LireloReader={open,close,goTo:jump,get state(){return state}};
+window.LireloReader={open,close,goTo:jump,zoomTo:setZoom,get state(){return state}};
 })();
