@@ -16,12 +16,7 @@ const key=()=>`lirelo-reader-v3-standalone:${state.book?.id}`;
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const currentChapter=page=>{const toc=state.doc?.toc||[];return [...toc].reverse().find(t=>t.page<=page)?.title||'Introduction';};
 const displayPage=()=>state.doc?`${state.page} / ${state.doc.pages}`:'1 / 1';
-async function api(path,opts){
-  const response=await fetch('/api/'+path,opts||{});
-  let payload;try{payload=await response.json()}catch{throw Error('The document service did not respond. Restart Lirelo.')}
-  if(!response.ok)throw Error(payload.error||'Unable to read your document.');
-  return payload;
-}
+async function api(path,opts){return window.LireloApp.request(path,opts||{});}
 
 function persist(){if(!state.book||!state.doc)return;try{localStorage.setItem(key(),JSON.stringify({annotations:state.annotations,page:state.page,offset:state.offset,mode:state.mode,zoom:state.zoom,font:state.font,fontFace:state.fontFace,tone:state.tone,tonePinned:state.tonePinned}))}catch(err){if(err?.name==='QuotaExceededError')toast('Browser storage is full. Changes will remain until you close this tab.')}}
 function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
@@ -128,7 +123,7 @@ function pageContent(data){const w=data.width,h=data.height;
 async function ensurePage(n){if(!state.active||!state.doc||n<1||n>state.doc.pages)return;
  const holder=$(`#rr-page-${n}`);if(!holder||state.loading.has(n)||holder.dataset.ready)return;
  state.loading.add(n);
- try{let data=state.pages.get(n);if(!data){data=await api(`page?id=${state.doc.id}&page=${n}`);state.pages.set(n,data)}
+ try{let data=state.pages.get(n);if(!data){data=await api(`page?id=${state.doc.id}&page=${n}&size=${state.doc.font||14}&font=${state.doc.fontface||'original'}`);state.pages.set(n,data)}
   if(!state.active||!$(`#rr-page-${n}`))return;
   holder.innerHTML=pageContent(data);holder.dataset.ready='1';paintMarkers(holder,n);
   requestAnimationFrame(()=>{holder.querySelectorAll('.rr-text-frag').forEach(frag=>{const range=document.createRange();range.selectNodeContents(frag);const natural=range.getBoundingClientRect().width,target=frag.getBoundingClientRect().width;if(natural>0&&target>0)frag.style.transform=`scaleX(${clamp(target/natural,.45,2.5)})`;})});
@@ -233,7 +228,7 @@ let searchToken=0,searchTimer;
 $('#rrSearchToggle').addEventListener('click',()=>{$('#rrSearchbar').classList.toggle('hidden');if(!$('#rrSearchbar').classList.contains('hidden'))$('#rrSearchInput').focus();else{state.search=[];paintAll()}});
 $('#rrSearchClose').addEventListener('click',()=>{$('#rrSearchbar').classList.add('hidden');state.search=[];paintAll()});
 $('#rrSearchInput').addEventListener('input',()=>{clearTimeout(searchTimer);const q=$('#rrSearchInput').value.trim();const token=++searchToken;searchTimer=setTimeout(async()=>{if(!q){state.search=[];$('#rrSearchCount').textContent='';paintAll();return}
- try{const found=await api('search?id='+state.doc.id+'&q='+encodeURIComponent(q));if(token!==searchToken)return;state.search=found.results;state.searchIndex=0;$('#rrSearchCount').textContent=found.count+' pages';paintAll();if(found.count){await jump(found.results[0].page);paintAll()}}catch(e){toast(e.message)}},300)});
+ try{const found=await api('search?id='+state.doc.id+'&size='+state.doc.font+'&font='+state.doc.fontface+'&q='+encodeURIComponent(q));if(token!==searchToken)return;state.search=found.results;state.searchIndex=0;$('#rrSearchCount').textContent=found.count+' pages';paintAll();if(found.count){await jump(found.results[0].page);paintAll()}}catch(e){toast(e.message)}},300)});
 function moveSearch(by){if(!state.search.length)return;state.searchIndex=(state.searchIndex+by+state.search.length)%state.search.length;jump(state.search[state.searchIndex].page).then(paintAll);$('#rrSearchCount').textContent=(state.searchIndex+1)+' / '+state.search.length+' pages'}
 $('#rrSearchPrev').addEventListener('click',()=>moveSearch(-1));$('#rrSearchNext').addEventListener('click',()=>moveSearch(1));
 // Arrow keys, trackpad horizontal scrolling and page dragging are only active in Swipe mode.
@@ -254,4 +249,3 @@ window.addEventListener('resize',()=>{resize();if(state.active){updateMeta();if(
 Promise.resolve().then(()=>{if(location.hash.startsWith('#reader=')){const id=decodeURIComponent(location.hash.slice(8));window.LireloApp?.ready?.then(()=>open(id,{pushHistory:false}))}});
 window.LireloReader={open,close,goTo:jump,get state(){return state}};
 })();
-
