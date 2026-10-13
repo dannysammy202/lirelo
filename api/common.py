@@ -132,6 +132,12 @@ def execute(handler,action):
             try:
                 if action in ('meta','reflow'):result=metadata(doc,id,kind,size,face)
                 elif action=='page':result=page_data(doc,int(param('page','1')))
+                elif action=='batch':
+                    first=int(param('start','1'))
+                    count=int(param('count','3'))
+                    if first<1 or first>doc.page_count or count<1 or count>3:
+                        raise ValueError('Invalid offline page range.')
+                    result={'pages':[page_data(doc,n) for n in range(first,min(first+count,doc.page_count+1))]}
                 elif action=='search':result=search(doc,param('q')[:140])
                 else:raise FileNotFoundError('Unknown document endpoint.')
             finally:doc.close()
