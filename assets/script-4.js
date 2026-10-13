@@ -128,7 +128,7 @@ async function saveOffline(){
    if(await window.LireloOffline.getPage(doc,n,uid))continue;
    let downloaded=false;
    try{
-    const batch=await window.LireloApp.request('batch?id='+encodeURIComponent(doc.id)+'&start='+n+'&count='+Math.min(3,doc.pages-n+1)+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original'));
+    const batch=await window.LireloApp.request('batch?id='+encodeURIComponent(doc.id)+'&start='+n+'&count='+Math.min(3,doc.pages-n+1)+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original')+(doc.layout==='mobile'?'&layout=mobile':''));
     if(!Array.isArray(batch.pages)||!batch.pages.length)throw new Error('Empty download batch');
     for(const data of batch.pages){
      if(task.cancelled||window.LireloApp?.user?.id!==uid)break;
@@ -141,7 +141,7 @@ async function saveOffline(){
    }catch(e){
     if(e?.name==='QuotaExceededError')throw new Error('Device storage is full. Free some space and resume the download.');
     // Older deployments and oversized scanned pages fall back to a single page.
-    await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original'));
+    await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original')+(doc.layout==='mobile'?'&layout=mobile':''));
     if(!await window.LireloOffline.getPage(doc,n,uid))throw new Error('Unable to store page '+n+' for offline use.');
     saved++;
    }
@@ -169,7 +169,7 @@ async function open(id,{page=null,pushHistory=true}={}){
  try{
   const d=await getDocument(b);if(open.token!==token)return;
   state.doc=d;loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
-  if(d.reflowable&&(state.font!==d.font||state.fontFace!==d.fontface))state.doc=await api(`reflow?id=${encodeURIComponent(d.id)}&size=${state.font}&font=${state.fontFace}`);
+  if(d.reflowable&&(state.font!==d.font||state.fontFace!==d.fontface))state.doc=await api(`reflow?id=${encodeURIComponent(d.id)}&size=${state.font}&font=${state.fontFace}${layoutArg()}`);
   await initialiseCanvas();renderNavigation();updateMeta();setTab('highlights');updateOfflineButton();
   if(pushHistory)history.pushState({reader:id},'',`#reader=${encodeURIComponent(id)}`);
  }catch(e){canvas.innerHTML=`<div class="rr-loading"><p>${safe(e.message)}</p><button type="button" class="primary-button" id="rrRetry">Retry</button></div>`;$('#rrRetry')?.addEventListener('click',()=>open(id,{pushHistory:false}));toast(e.message)}
@@ -259,7 +259,7 @@ function pageContent(data){const w=data.width,h=data.height;
 async function ensurePage(n){if(!state.active||!state.doc||n<1||n>state.doc.pages)return;
  const holder=$(`#rr-page-${n}`);if(!holder||state.loading.has(n)||holder.dataset.ready)return;
  state.loading.add(n);
- try{let data=state.pages.get(n);if(!data){data=await api(`page?id=${state.doc.id}&page=${n}&size=${state.doc.font||14}&font=${state.doc.fontface||'original'}`);state.pages.set(n,data)}
+ try{let data=state.pages.get(n);if(!data){data=await api(`page?id=${state.doc.id}&page=${n}&size=${state.doc.font||14}&font=${state.doc.fontface||'original'}${layoutArg()}`);state.pages.set(n,data)}
   if(!state.active||!$(`#rr-page-${n}`))return;
   holder.innerHTML=pageContent(data);holder.dataset.ready='1';paintMarkers(holder,n);
   requestAnimationFrame(()=>{holder.querySelectorAll('.rr-text-frag').forEach(frag=>{const range=document.createRange();range.selectNodeContents(frag);const natural=range.getBoundingClientRect().width,target=frag.getBoundingClientRect().width;if(natural>0&&target>0)frag.style.transform=`scaleX(${clamp(target/natural,.45,2.5)})`;})});
@@ -297,8 +297,8 @@ let relayoutToken=0;
 $('#rrFontSize').addEventListener('input',e=>{$('#rrFontValue').textContent=e.target.value+' pt'});
 $('#rrFontSize').addEventListener('change',async e=>{state.font=Number(e.target.value);if(!state.doc?.reflowable){toast('PDF font sizes follow the original document. Use zoom to enlarge the page.');return}
  const prior=(state.page-1)/Math.max(1,state.doc.pages-1),token=++relayoutToken;
- try{state.doc=await api(`reflow?id=${state.doc.id}&size=${state.font}&font=${state.fontFace}`);if(token!==relayoutToken)return;state.page=clamp(1+Math.round(prior*Math.max(0,state.doc.pages-1)),1,state.doc.pages);state.pages.clear();await initialiseCanvas();renderNavigation();updateMeta();persist();renderPanel()}catch(err){toast(err.message)}});
-$('#rrFontFace').addEventListener('change',async e=>{state.fontFace=e.target.value;if(!state.doc?.reflowable){toast('PDF typography stays as defined in the original document.');return}const prev=(state.page-1)/Math.max(1,state.doc.pages-1);try{state.doc=await api(`reflow?id=${state.doc.id}&size=${state.font}&font=${state.fontFace}`);state.page=clamp(1+Math.round(prev*Math.max(0,state.doc.pages-1)),1,state.doc.pages);state.pages.clear();await initialiseCanvas();renderNavigation();updateMeta();persist();renderPanel()}catch(err){toast(err.message)}});
+ try{state.doc=await api(`reflow?id=${state.doc.id}&size=${state.font}&font=${state.fontFace}${layoutArg()}`);if(token!==relayoutToken)return;state.page=clamp(1+Math.round(prior*Math.max(0,state.doc.pages-1)),1,state.doc.pages);state.pages.clear();await initialiseCanvas();renderNavigation();updateMeta();persist();renderPanel()}catch(err){toast(err.message)}});
+$('#rrFontFace').addEventListener('change',async e=>{state.fontFace=e.target.value;if(!state.doc?.reflowable){toast('PDF typography stays as defined in the original document.');return}const prev=(state.page-1)/Math.max(1,state.doc.pages-1);try{state.doc=await api(`reflow?id=${state.doc.id}&size=${state.font}&font=${state.fontFace}${layoutArg()}`);state.page=clamp(1+Math.round(prev*Math.max(0,state.doc.pages-1)),1,state.doc.pages);state.pages.clear();await initialiseCanvas();renderNavigation();updateMeta();persist();renderPanel()}catch(err){toast(err.message)}});
 $('#rrPageTone').addEventListener('change',e=>{state.tone=e.target.value;state.tonePinned=true;updateMeta();persist()});
 $('#rrSettingsToggle').addEventListener('click',()=>$('#rrSettings').classList.toggle('hidden'));
 $('#rrHighlightTool').addEventListener('click',()=>{if(state.selection)saveHighlight();else toast(state.pages.get(state.page)?.hasText===false?'This image-only page has no selectable text. You may save a note or bookmark.':'Select text on the page before highlighting.')});
@@ -364,7 +364,7 @@ let searchToken=0,searchTimer;
 $('#rrSearchToggle').addEventListener('click',()=>{$('#rrSearchbar').classList.toggle('hidden');if(!$('#rrSearchbar').classList.contains('hidden'))$('#rrSearchInput').focus();else{state.search=[];paintAll()}});
 $('#rrSearchClose').addEventListener('click',()=>{$('#rrSearchbar').classList.add('hidden');state.search=[];paintAll()});
 $('#rrSearchInput').addEventListener('input',()=>{clearTimeout(searchTimer);const q=$('#rrSearchInput').value.trim();const token=++searchToken;searchTimer=setTimeout(async()=>{if(!q){state.search=[];$('#rrSearchCount').textContent='';paintAll();return}
- try{const found=await api('search?id='+state.doc.id+'&size='+state.doc.font+'&font='+state.doc.fontface+'&q='+encodeURIComponent(q));if(token!==searchToken)return;state.search=found.results;state.searchIndex=0;$('#rrSearchCount').textContent=found.count+' pages';paintAll();if(found.count){await jump(found.results[0].page);paintAll()}}catch(e){toast(e.message)}},300)});
+ try{const found=await api('search?id='+state.doc.id+'&size='+state.doc.font+'&font='+state.doc.fontface+layoutArg()+'&q='+encodeURIComponent(q));if(token!==searchToken)return;state.search=found.results;state.searchIndex=0;$('#rrSearchCount').textContent=found.count+' pages';paintAll();if(found.count){await jump(found.results[0].page);paintAll()}}catch(e){toast(e.message)}},300)});
 function moveSearch(by){if(!state.search.length)return;state.searchIndex=(state.searchIndex+by+state.search.length)%state.search.length;jump(state.search[state.searchIndex].page).then(paintAll);$('#rrSearchCount').textContent=(state.searchIndex+1)+' / '+state.search.length+' pages'}
 $('#rrSearchPrev').addEventListener('click',()=>moveSearch(-1));$('#rrSearchNext').addEventListener('click',()=>moveSearch(1));
 // Arrow keys, trackpad horizontal scrolling and page dragging are only active in Swipe mode.
