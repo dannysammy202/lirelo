@@ -33,18 +33,18 @@ async function action(store,mode,work){
 const get=(store,key)=>action(store,'readonly',s=>s.get(key));
 const put=(store,row)=>action(store,'readwrite',s=>s.put(row));
 const deleteItem=(store,key)=>action(store,'readwrite',s=>s.delete(key));
-const docKey=(uid,id,size=14,font='original')=>uid+':'+id+':'+size+':'+font;
-const pageKey=(uid,id,size,font,page)=>docKey(uid,id,size,font)+':'+page;
+const docKey=(uid,id,size=14,font='original',layout='standard')=>uid+':'+id+':'+size+':'+font+(layout==='mobile'?':mobile':'');
+const pageKey=(uid,id,size,font,page,layout='standard')=>docKey(uid,id,size,font,layout)+':'+page;
 const sizeFor=doc=>Number(doc.font)||14;
 const fontFor=doc=>doc.fontface||'original';
 function user(){return window.LireloApp?.user?.id||null}
-async function saveMeta(doc,uid=user()){if(!uid||!doc?.id)return;await put('books',{key:docKey(uid,doc.id,sizeFor(doc),fontFor(doc)),doc})}
-async function getMeta(id,size=14,font='original',uid=user()){if(!uid)return null;return (await get('books',docKey(uid,id,size,font)))?.doc||null}
-async function savePage(doc,page,data,uid=user()){if(!uid||!doc||!data)return;await put('pages',{key:pageKey(uid,doc.id,sizeFor(doc),fontFor(doc),page),data})}
-async function getPage(doc,page,uid=user()){if(!uid||!doc)return null;return (await get('pages',pageKey(uid,doc.id,sizeFor(doc),fontFor(doc),page)))?.data||null}
+async function saveMeta(doc,uid=user()){if(!uid||!doc?.id)return;await put('books',{key:docKey(uid,doc.id,sizeFor(doc),fontFor(doc),doc.layout),doc})}
+async function getMeta(id,size=14,font='original',uid=user(),layout='standard'){if(!uid)return null;return (await get('books',docKey(uid,id,size,font,layout)))?.doc||null}
+async function savePage(doc,page,data,uid=user()){if(!uid||!doc||!data)return;await put('pages',{key:pageKey(uid,doc.id,sizeFor(doc),fontFor(doc),page,doc.layout),data})}
+async function getPage(doc,page,uid=user()){if(!uid||!doc)return null;return (await get('pages',pageKey(uid,doc.id,sizeFor(doc),fontFor(doc),page,doc.layout)))?.data||null}
 async function pageCount(doc,uid=user()){
  if(!uid||!doc)return 0;
- const db=await connect(),prefix=docKey(uid,doc.id,sizeFor(doc),fontFor(doc))+':';
+ const db=await connect(),prefix=docKey(uid,doc.id,sizeFor(doc),fontFor(doc),doc.layout)+':';
  return new Promise((resolve,reject)=>{
   const request=db.transaction('pages').objectStore('pages').getAllKeys(IDBKeyRange.bound(prefix,prefix+'\uffff'));
   request.onsuccess=()=>resolve(request.result.length);request.onerror=()=>reject(request.error);
@@ -52,13 +52,13 @@ async function pageCount(doc,uid=user()){
 }
 async function forget(doc,uid=user()){
  if(!uid||!doc)return;
- const prefix=docKey(uid,doc.id,sizeFor(doc),fontFor(doc))+':';
+ const prefix=docKey(uid,doc.id,sizeFor(doc),fontFor(doc),doc.layout)+':';
  const db=await connect();
  await new Promise((resolve,reject)=>{
   const tx=db.transaction(['pages','books'],'readwrite'),pages=tx.objectStore('pages');
   const cursor=pages.openKeyCursor(IDBKeyRange.bound(prefix,prefix+'\uffff'));
   cursor.onsuccess=()=>{if(cursor.result){pages.delete(cursor.result.primaryKey);cursor.result.continue()}};
-  tx.objectStore('books').delete(docKey(uid,doc.id,sizeFor(doc),fontFor(doc)));
+  tx.objectStore('books').delete(docKey(uid,doc.id,sizeFor(doc),fontFor(doc),doc.layout));
   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
  });
 }
