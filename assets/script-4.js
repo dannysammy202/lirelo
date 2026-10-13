@@ -23,8 +23,8 @@ async function api(path,opts){
  const live=()=>window.LireloApp.request(path,opts||{});
  const offline=window.LireloOffline,uid=window.LireloApp?.user?.id;
  if(!offline||!uid||opts)return live();
- const parsed=new URL(path,'https://lirelo.local'),params=parsed.searchParams,id=params.get('id');
- if(parsed.pathname==='meta'||parsed.pathname==='reflow'){
+ const parsed=new URL(path,'https://lirelo.local'),params=parsed.searchParams,id=params.get('id'),endpoint=parsed.pathname.replace(/^\/+/, '');
+ if(endpoint==='meta'||endpoint==='reflow'){
   const size=Number(params.get('size')||14);
   const font=params.get('font')||'original';
   const layout=params.get('layout')||'standard';
@@ -33,7 +33,7 @@ async function api(path,opts){
   try{const doc=await live();await offline.saveMeta(doc,uid).catch(e=>console.warn('Offline metadata:',e));return doc}
   catch(e){const doc=await cached();if(doc)return doc;throw e}
  }
- if(parsed.pathname==='page'&&state.doc?.id===id){
+ if(endpoint==='page'&&state.doc?.id===id){
   const n=Number(params.get('page')),doc=state.doc;
   const saved=await offline.getPage(doc,n,uid).catch(()=>null);
   if(saved)return saved;
