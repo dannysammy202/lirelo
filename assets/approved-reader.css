@@ -164,12 +164,12 @@
    width:min(100%,calc(100vw - 20px))!important;min-height:0;
    box-shadow:0 2px 13px rgba(56,49,56,.1);
  }
- #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page-content{
+ #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-page-content{
    aspect-ratio:auto!important;height:auto!important;overflow:visible;min-height:0;
  }
- #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page-img,
- #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-text-layer,
- #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-markers{display:none!important}
+ #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-page-img,
+ #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-text-layer,
+ #app.reader-open .reader-screen.acr-enabled.acr-reflow .rr-page.acr-text-page .rr-markers{display:none!important}
  #app.reader-open .reader-screen.acr-enabled.acr-reflow .acr-flow-text{
    display:block;color:#24212B;background:#FFFEFC;
    padding:25px 22px 29px;font-family:Georgia,'Times New Roman',serif;
