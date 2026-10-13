@@ -22,7 +22,7 @@ async function refresh(){
   const value=await http('/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:state.session.refresh_token})},false);
   if(!value.access_token)throw new Error('No valid session');
   saveSession(value);return true;
- }catch{state.session=null;state.user=null;localStorage.removeItem(SESSION);return false;}
+ }catch(e){if(!navigator.onLine||e instanceof TypeError)return false;state.session=null;state.user=null;localStorage.removeItem(SESSION);return false;}
 }
 function saveSession(value){state.session={...value,expires_at:Math.floor(Date.now()/1000)+Number(value.expires_in||3600)};localStorage.setItem(SESSION,JSON.stringify(state.session));}
 async function access(){
@@ -94,20 +94,26 @@ async function service(path,options={}){
  return data;
 }
 function mapBook(b){return {...b,added:Math.floor(new Date(b.added).getTime()/1000),cover:'uploaded',tags:b.tags||[],toc:b.toc||[]};}
-async function load(){
- await access();
+async function load(offlineSnapshot=null){
+ if(!offlineSnapshot)await access();
  const lib=window.LireloLibrary, final=window.LireloFinal;
- const books=await db('lirelo_books?select=*&order=added.desc');
+ const books=offlineSnapshot?offlineSnapshot.books:await db('lirelo_books?select=*&order=added.desc');
  state.books=books.map(mapBook);
  // Discard any demo books and use only the authenticated account's records.
  lib.state.books.splice(0,lib.state.books.length,...state.books.filter(b=>!b.trashed));
  lib.state.collections=[...new Set(['Personal','Work','Learning','Favourites',...state.books.map(b=>b.collection).filter(Boolean)])];
- const rows=await db('lirelo_reading_state?select=book_id,data');
- const profiles=await db('lirelo_profiles?select=display_name,preferences,collections');
+ const rows=offlineSnapshot?[]:await db('lirelo_reading_state?select=book_id,data');
+ const profiles=offlineSnapshot?(offlineSnapshot.profile?[offlineSnapshot.profile]:[]):await db('lirelo_profiles?select=display_name,preferences,collections');
  const profile=profiles[0]||null;
+ if(!offlineSnapshot&&state.user?.id){
+  state.session.user=state.user;
+  localStorage.setItem(SESSION,JSON.stringify(state.session));
+  window.LireloOffline?.saveLibrary(state.user.id,books,profile).catch(e=>console.warn('Offline library:',e));
+ }
+ const dirty=readDirty();
  const cloudName=profile?.display_name?.trim()||state.user.email.split('@')[0];
  state.suppress=true;
- try{rows.forEach(row=>{if(!state.books.some(b=>b.id===row.book_id))return;localStorage.setItem('lirelo-reader-v3-standalone:'+row.book_id,JSON.stringify(row.data));});if(profile){if(profile.preferences)localStorage.setItem('lirelo-complete-preferences-v1',JSON.stringify(profile.preferences));if(profile.display_name)localStorage.setItem('lirelo-complete-profile-v1',JSON.stringify({name:profile.display_name}));}}
+ try{rows.forEach(row=>{if(dirty.has(row.book_id)||!state.books.some(b=>b.id===row.book_id))return;localStorage.setItem('lirelo-reader-v3-standalone:'+row.book_id,JSON.stringify(row.data));});if(profile){if(profile.preferences)localStorage.setItem('lirelo-complete-preferences-v1',JSON.stringify(profile.preferences));if(profile.display_name)localStorage.setItem('lirelo-complete-profile-v1',JSON.stringify({name:profile.display_name}));}}
  finally{state.suppress=false;}
  if(final){final.trash.splice(0,final.trash.length,...state.books.filter(b=>b.trashed));if(profile){if(profile.preferences){Object.assign(final.preferences,profile.preferences);document.documentElement.dataset.lireloPalette=final.preferences.palette||'classic';}final.profile.name=cloudName;document.querySelector('.profile-copy strong').textContent=cloudName;const initials=cloudName.split(/\s+/).slice(0,2).map(p=>p.charAt(0)).join('').toUpperCase();document.querySelector('.profile-avatar').textContent=initials;document.getElementById('topProfile').textContent=initials;}}
  if(final&&!profile){final.profile.name=cloudName;document.querySelector('.profile-copy strong').textContent=cloudName;const initials=cloudName.split(/\s+/).slice(0,2).map(p=>p.charAt(0)).join('').toUpperCase();document.querySelector('.profile-avatar').textContent=initials;document.getElementById('topProfile').textContent=initials;}
@@ -117,6 +123,31 @@ async function load(){
  if(location.hash.startsWith('#book='))window.LireloBookDetails?.open(decodeURIComponent(location.hash.slice(6)),{pushHistory:false});
  if(location.hash.startsWith('#reader='))window.LireloReader?.open(decodeURIComponent(location.hash.slice(8)),{pushHistory:false});
  state.ready=true;readyResolve();
+}
+function readDirty(){try{return new Set(JSON.parse(localStorage.getItem('lirelo-offline-dirty:'+state.user?.id)||'[]'))}catch{return new Set()}}
+function markDirty(id){if(!state.user?.id)return;const ids=readDirty();ids.add(id);localStorage.setItem('lirelo-offline-dirty:'+state.user.id,JSON.stringify([...ids]))}
+async function syncOfflineChanges(){
+ if(!navigator.onLine||!state.user?.id||!state.session)return;
+ const uid=state.user.id,dirty=readDirty();
+ for(const id of dirty){
+  const raw=localStorage.getItem('lirelo-reader-v3-standalone:'+id);
+  if(!raw){dirty.delete(id);continue}
+  try{await db('lirelo_reading_state?on_conflict=book_id',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({owner_id:uid,book_id:id,data:JSON.parse(raw),updated_at:new Date().toISOString()})});dirty.delete(id)}
+  catch(e){console.warn('Offline reading sync:',e.message);break}
+ }
+ localStorage.setItem('lirelo-offline-dirty:'+uid,JSON.stringify([...dirty]));
+}
+async function restoreOffline(){
+ const user=state.session?.user,offline=window.LireloOffline;
+ if(!user?.id||!offline)return false;
+ try{
+  const snapshot=await offline.getLibrary(user.id);
+  if(!snapshot?.books)return false;
+  state.user=user;await load(snapshot);
+  document.getElementById('app').classList.add('lc-ready');
+  window.LireloLibrary?.toast?.('Offline library ready. Saved books are available to read.');
+  return true;
+ }catch(e){console.warn('Offline library restore:',e);return false}
 }
 async function importBook(file){
  await access();
@@ -144,8 +175,9 @@ function updateBook(book){if(!book?.id||!state.user)return;
  defer('book:'+book.id,()=>db('lirelo_books?id=eq.'+encodeURIComponent(book.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:book.title,author:book.author,collection:book.collection||'Personal',tags:book.tags||[],progress:Math.round(book.progress||0)})}),850);
 }
 function updateProgress(id,progress){const b=window.LireloLibrary?.state.books.find(x=>x.id===id);if(b){b.progress=Math.round(progress);updateBook(b);}}
-function saveProfile(){if(!state.user)return;defer('profile',()=>{const prefs=JSON.parse(localStorage.getItem('lirelo-complete-preferences-v1')||'{}');const raw=JSON.parse(localStorage.getItem('lirelo-complete-profile-v1')||'{}');return db('lirelo_profiles?on_conflict=user_id',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:state.user.id,display_name:String(raw.name||state.user.email.split('@')[0]).slice(0,55),preferences:prefs,collections:window.LireloLibrary?.state.collections||[],updated_at:new Date().toISOString()})})},800)}
+function saveProfile(){if(!state.user)return;if(!navigator.onLine)return;defer('profile',()=>{const prefs=JSON.parse(localStorage.getItem('lirelo-complete-preferences-v1')||'{}');const raw=JSON.parse(localStorage.getItem('lirelo-complete-profile-v1')||'{}');return db('lirelo_profiles?on_conflict=user_id',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:state.user.id,display_name:String(raw.name||state.user.email.split('@')[0]).slice(0,55),preferences:prefs,collections:window.LireloLibrary?.state.collections||[],updated_at:new Date().toISOString()})})},800)}
 function saveState(id){if(!state.user||!state.books.some(b=>b.id===id))return;
+ if(!navigator.onLine){markDirty(id);return;}
  defer('state:'+id,()=>{
   const raw=localStorage.getItem('lirelo-reader-v3-standalone:'+id);if(!raw)return;
   const data=JSON.parse(raw);
@@ -162,6 +194,9 @@ async function removeForever(id){const b=state.books.find(x=>x.id===id);if(!b)re
 function saveCollections(_list){saveProfile()} // Cloud profile stores custom collections; book assignments stay in their own records.
 async function signOut(){
  if(!state.session)return;
+ const uid=state.user?.id||state.session?.user?.id;
+ await window.LireloOffline?.clearUser(uid).catch(e=>console.warn('Offline cache deletion:',e));
+ localStorage.removeItem('lirelo-offline-dirty:'+uid);
  state.suppress=true;
  // Clear any cached data from this account so the next signer-in never sees it.
  for(const key of Object.keys(localStorage)){
@@ -197,11 +232,23 @@ async function initialise(){
  }
  try{const session=JSON.parse(localStorage.getItem(SESSION)||'null');if(session?.access_token&&session.refresh_token){
   state.session=session;
-  if(session.expires_at-Date.now()/1000<90)await refresh();
-  if(state.session){const user=await http('/auth/v1/user');if(user?.id){state.user=user;await load();document.getElementById('app').classList.add('lc-ready');return;}}
+  if(navigator.onLine&&session.expires_at-Date.now()/1000<90)await refresh();
+  if(state.session&&navigator.onLine){
+   try{const user=await http('/auth/v1/user');if(user?.id){state.user=user;await syncOfflineChanges();await load();document.getElementById('app').classList.add('lc-ready');return}}
+   catch(e){console.warn('Online session check:',e.message)}
+  }
+  if(await restoreOffline())return;
  }}catch(e){console.warn('Sign-in check:',e.message)}
- authScreen();
+ authScreen({message:!navigator.onLine?'Connect to the internet to sign in, or open a library previously saved on this device.':''});
 }
+window.addEventListener('online',async()=>{
+ if(!state.user?.id||!state.session)return;
+ try{
+  await syncOfflineChanges();
+  await load();
+  window.LireloLibrary?.toast?.('Your reading progress is back in sync.');
+ }catch(e){console.warn('Reconnection:',e.message)}
+});
 window.LireloApp={ready,load,importBook,updateBook,updateProgress,saveNote,deleteNote,savedAnnotations,syncTrash,removeForever,saveCollections,request:service,signOut,get user(){return state.user}};
 document.addEventListener('DOMContentLoaded',initialise,{once:true});
 })();
