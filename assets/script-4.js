@@ -209,7 +209,7 @@ async function open(id,{page=null,pushHistory=true}={}){
  $('#rrBookTitle').textContent=b.title;$('#rrBookSubtitle').textContent='Preparing local reader';
  try{
   const d=await getDocument(b);if(open.token!==token)return;
-  state.doc=d;loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
+  state.doc=d;screen.classList.toggle('rr-phone-epub',phone()&&d.layout==='mobile');loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
   if(d.reflowable&&(state.font!==d.font||state.fontFace!==d.fontface))state.doc=await api(`reflow?id=${encodeURIComponent(d.id)}&size=${state.font}&font=${state.fontFace}${layoutArg()}`);
   await initialiseCanvas();renderNavigation();updateMeta();setTab('highlights');updateOfflineButton();
   if(pushHistory)history.pushState({reader:id},'',`#reader=${encodeURIComponent(id)}`);
