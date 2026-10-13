@@ -10,7 +10,7 @@ const safe=lib.safe,ico=lib.svg,toast=lib.toast;
 $$('[data-ri]').forEach(el=>el.innerHTML=ico(el.dataset.ri));
 $('#readerLeft').querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=ico(el.dataset.icon));
 const screen=$('#readerScreen'),canvas=$('#rrCanvas'),list=$('#rrRightList');
-const small=()=>innerWidth<=760||(innerWidth<=1180&&matchMedia('(orientation:landscape)').matches);
+const small=()=>innerWidth<=760||((innerWidth<=1180||(innerWidth<=1366&&matchMedia('(pointer:coarse)').matches))&&matchMedia('(orientation:landscape)').matches);
 const state={active:false,book:null,doc:null,page:1,mode:'scroll',zoom:100,font:14,fontFace:'original',tone:'light',tonePinned:false,tab:'highlights',filter:'',tag:'all',annotations:{highlights:[],notes:[],bookmarks:[]},selection:null,search:[],searchIndex:0,offset:0,searchTerm:'',pages:new Map(),loading:new Set(),observer:null,drag:null,hideRight:false,restore:false};
 const key=()=>`lirelo-reader-v3-standalone:${state.book?.id}`;
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
