@@ -28,7 +28,7 @@
  /* EPUB is now rendered by the server for a 360px-wide phone page at full reading font size. */
  #app.reader-open .reader-screen.rr-phone-epub .rr-canvas{background:#FFFCF8}
  #app.reader-open .reader-screen.rr-phone-epub .rr-page-stack{padding:8px 9px 16px;gap:8px}
- #app.reader-open .reader-screen.rr-phone-epub .rr-page{width:calc(min(360px,100vw - 20px) * var(--rr-zoom,1))!important;box-shadow:none;background:#FFFCF8;border:0;min-height:0}
+ #app.reader-open .reader-screen.rr-phone-epub .rr-page{width:min(360px,calc(100vw - 20px))!important;box-shadow:none;background:#FFFCF8;border:0;min-height:0}
  #app.reader-open .reader-screen.rr-phone-epub .rr-page-content{background:#FFFCF8}
  #app.reader-open .reader-screen.rr-phone-epub .rr-page-num{bottom:6px;right:8px;background:transparent;border:0;font-size:9px}
  /* A fixed-layout PDF can pan horizontally while zoomed, without trapping vertical scrolling. */
