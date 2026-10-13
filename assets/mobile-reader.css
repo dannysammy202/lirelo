@@ -8,7 +8,7 @@
  /* Eliminate the web-style double toolbar: the page and bottom pager are primary. */
  #app.reader-open .reader-screen .rr-tools{display:none!important}
  #app.reader-open .reader-screen .rr-bottom{display:none!important}
- #app.reader-open .reader-screen .rr-topbar{height:52px;min-height:52px;flex:none;padding:0 10px 0 max(8px,env(safe-area-inset-left));gap:6px;background:#FFFCF8;border-bottom:1px solid #EDE7E3}
+ #app.reader-open .reader-screen .rr-topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top));flex:none;padding:env(safe-area-inset-top) 10px 0 max(8px,env(safe-area-inset-left));gap:6px;background:#FFFCF8;border-bottom:1px solid #EDE7E3}
  #app.reader-open .rr-back{height:43px;width:43px;padding:10px}
  #app.reader-open .rr-back svg{height:21px;width:21px}
  #app.reader-open .rr-top-left{min-width:0;gap:4px}
@@ -57,7 +57,7 @@
  #app.reader-open .reader-screen.rr-immersive .rr-canvas{height:100%}
 }
 @media(min-width:768px) and (max-width:1100px) and (max-height:500px) and (pointer:coarse){
- #app.reader-open .reader-screen .rr-topbar{height:43px;min-height:43px}
+ #app.reader-open .reader-screen .rr-topbar{height:calc(43px + env(safe-area-inset-top));min-height:calc(43px + env(safe-area-inset-top))}
  #app.reader-open .reader-screen #lrMobilePager{min-height:45px;height:45px;padding-block:1px}
  #lrMobilePager button{height:39px}
  #app.reader-open .rr-page-stack{padding-top:7px}
