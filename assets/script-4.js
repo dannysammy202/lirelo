@@ -46,8 +46,36 @@ async function api(path,opts){
  return live();
 }
 
-function persist(){if(!state.book||!state.doc)return;try{localStorage.setItem(key(),JSON.stringify({annotations:state.annotations,page:state.page,offset:state.offset,mode:state.mode,zoom:state.zoom,font:state.font,fontFace:state.fontFace,tone:state.tone,tonePinned:state.tonePinned,pages:state.doc.pages,layout:state.doc.layout||'standard'}))}catch(err){if(err?.name==='QuotaExceededError')toast('Browser storage is full. Changes will remain until you close this tab.')}}
-function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const fromStandard=state.doc?.layout==='mobile'&&!raw;let base=null;if(fromStandard){try{base=JSON.parse(localStorage.getItem(standardKey()))}catch{}}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,phone()?300:175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
+function mirrorPhoneAnnotations(){
+ if(state.doc?.layout!=='mobile')return;
+ let desktop;try{desktop=JSON.parse(localStorage.getItem(standardKey()))||{}}catch{desktop={}}
+ desktop.annotations ||= {highlights:[],notes:[],bookmarks:[]};
+ const total=Math.max(1,Number(desktop.pages)||Number(state.book?.pages)||1);
+ let changed=false;
+ for(const kind of ['highlights','notes','bookmarks']){
+  const existing=Array.isArray(desktop.annotations[kind])?desktop.annotations[kind]:[];
+  const mobile=state.annotations[kind]||[],byId=new Set(existing.map(item=>item.id));
+  const present=new Set(mobile.map(item=>item.id));
+  // Keep original desktop anchors untouched. Only phone-created annotations are mirrored.
+  const kept=existing.filter(item=>item.sourceLayout!=='mobile'||present.has(item.id));
+  if(kept.length!==existing.length)changed=true;
+  for(const item of mobile){
+   if(!item.id||byId.has(item.id))continue;
+   kept.unshift({...item,sourceLayout:'mobile',page:clamp(Math.round(Number(item.page)/Math.max(1,state.doc.pages)*total),1,total),rects:[]});
+   changed=true;
+  }
+  desktop.annotations[kind]=kept;
+ }
+ if(changed)localStorage.setItem(standardKey(),JSON.stringify(desktop));
+}
+function persist(){
+ if(!state.book||!state.doc)return;
+ try{
+  localStorage.setItem(key(),JSON.stringify({annotations:state.annotations,page:state.page,offset:state.offset,mode:state.mode,zoom:state.zoom,font:state.font,fontFace:state.fontFace,tone:state.tone,tonePinned:state.tonePinned,pages:state.doc.pages,layout:state.doc.layout||'standard'}));
+  mirrorPhoneAnnotations();
+ }catch(err){if(err?.name==='QuotaExceededError')toast('Browser storage is full. Changes will remain until you close this tab.')}
+}
+function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const fromStandard=state.doc?.layout==='mobile';let base=null;if(fromStandard){try{base=JSON.parse(localStorage.getItem(standardKey()))}catch{}}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,phone()?300:175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
   state.page=state.book.id==='everyday'?4:1;state.offset=0;state.mode='scroll';state.zoom=100;state.font=Number.isFinite(+pref.size)?clamp(+pref.size,10,22):14;state.fontFace=['original','serif','sans'].includes(pref.font)?pref.font:'original';state.mode=pref.mode==='swipe'?'swipe':'scroll';state.tone=initialTone;
   if(state.doc?.layout==='mobile'){
    // Preserve the original desktop positions; mobile reading has a separate pagination.
@@ -70,7 +98,18 @@ function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()
     state.annotations.notes=[{id:'sample-n1',page:4,text:'Keep reading controls clear and within reach without interrupting the book.',quote:'A labelled control should explain what happens next.',rects:[],chapter:'Affordances and Signifiers',created:1730000002000}];
     state.annotations.bookmarks=[{id:'sample-b1',page:5,title:'Reading for understanding',chapter:'Reading for understanding',created:1730000001000}];
   }
-}}
+ }
+ if(state.doc?.layout==='mobile'&&base?.annotations){
+  const total=Math.max(1,Number(base.pages)||Number(state.book?.pages)||1);
+  for(const kind of ['notes','bookmarks','highlights']){
+   const present=new Set(state.annotations[kind].map(item=>item.id));
+   for(const item of base.annotations[kind]||[]){
+    if(present.has(item.id))continue;
+    state.annotations[kind].push({...item,page:clamp(Math.round(Number(item.page)/total*state.doc.pages),1,state.doc.pages),rects:[]});
+   }
+  }
+ }
+}
 function updateMeta(){if(!state.doc)return;updateFullscreenPage();
  $('#rrBookTitle').textContent=state.book.title;$('#rrBookSubtitle').textContent=`${state.book.author} · ${state.doc.format.toUpperCase()} · your document`;
  $('#rrBookFormat').textContent=state.doc.format.toUpperCase();$('#rrLeftTitle').textContent=state.book.title;
