@@ -10,13 +10,37 @@ const safe=lib.safe,ico=lib.svg,toast=lib.toast;
 $$('[data-ri]').forEach(el=>el.innerHTML=ico(el.dataset.ri));
 $('#readerLeft').querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=ico(el.dataset.icon));
 const screen=$('#readerScreen'),canvas=$('#rrCanvas'),list=$('#rrRightList');
-const small=()=>innerWidth<=760;
+const small=()=>innerWidth<=760||(innerWidth<=1180&&matchMedia('(orientation:landscape)').matches);
 const state={active:false,book:null,doc:null,page:1,mode:'scroll',zoom:100,font:14,fontFace:'original',tone:'light',tonePinned:false,tab:'highlights',filter:'',tag:'all',annotations:{highlights:[],notes:[],bookmarks:[]},selection:null,search:[],searchIndex:0,offset:0,searchTerm:'',pages:new Map(),loading:new Set(),observer:null,drag:null,hideRight:false,restore:false};
 const key=()=>`lirelo-reader-v3-standalone:${state.book?.id}`;
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const currentChapter=page=>{const toc=state.doc?.toc||[];return [...toc].reverse().find(t=>t.page<=page)?.title||'Introduction';};
 const displayPage=()=>state.doc?`${state.page} / ${state.doc.pages}`:'1 / 1';
-async function api(path,opts){return window.LireloApp.request(path,opts||{});}
+async function api(path,opts){
+ const live=()=>window.LireloApp.request(path,opts||{});
+ const offline=window.LireloOffline,uid=window.LireloApp?.user?.id;
+ if(!offline||!uid||opts)return live();
+ const parsed=new URL(path,'https://lirelo.local'),params=parsed.searchParams,id=params.get('id');
+ if(parsed.pathname==='meta'||parsed.pathname==='reflow'){
+  const size=parsed.pathname==='meta'?14:Number(params.get('size')||14);
+  const font=parsed.pathname==='meta'?'original':(params.get('font')||'original');
+  const cached=()=>offline.getMeta(id,size,font,uid);
+  if(!navigator.onLine){const doc=await cached();if(doc)return doc;throw new Error('This book is not saved offline. Connect to the internet and use Save offline.')}
+  try{const doc=await live();await offline.saveMeta(doc,uid).catch(e=>console.warn('Offline metadata:',e));return doc}
+  catch(e){const doc=await cached();if(doc)return doc;throw e}
+ }
+ if(parsed.pathname==='page'&&state.doc?.id===id){
+  const n=Number(params.get('page')),doc=state.doc;
+  const saved=await offline.getPage(doc,n,uid).catch(()=>null);
+  if(saved)return saved;
+  if(!navigator.onLine)throw new Error('This page has not downloaded yet. Connect to complete offline saving.');
+  const data=await live();
+  await offline.savePage(doc,n,data,uid).catch(e=>{if(e?.name==='QuotaExceededError')toast('Device storage is full. Free space to download more pages.');else console.warn('Offline page:',e)});
+  return data;
+ }
+ if(!navigator.onLine)throw new Error('Search requires a connection. Your saved book remains readable offline.');
+ return live();
+}
 
 function persist(){if(!state.book||!state.doc)return;try{localStorage.setItem(key(),JSON.stringify({annotations:state.annotations,page:state.page,offset:state.offset,mode:state.mode,zoom:state.zoom,font:state.font,fontFace:state.fontFace,tone:state.tone,tonePinned:state.tonePinned}))}catch(err){if(err?.name==='QuotaExceededError')toast('Browser storage is full. Changes will remain until you close this tab.')}}
 function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
@@ -62,6 +86,45 @@ async function dbAll(){try{const db=await openDB();return await new Promise((res
 async function restoreUploads(){for(const row of await dbAll()){if(!lib.state.books.some(b=>b.id===row.id)){const progress=localStorage.getItem('lirelo-reader-progress:'+row.id);if(progress!==null&&Number.isFinite(Number(progress)))row.meta.progress=clamp(Number(progress),0,100);lib.state.books.unshift(row.meta);(window.LireloPendingFiles ||= new Map()).set(row.id,row.file)}}lib.render();lib.renderCollectionsNav()}
 async function rememberUploaded(){await new Promise(r=>setTimeout(r,0));const files=window.LireloPendingFiles||new Map();for(const [id,file] of files){if(savedUploads.has(id))continue;const meta=lib.state.books.find(b=>b.id===id);if(meta){savedUploads.add(id);await dbPut({id,file,meta})}}}
 const savedUploads=new Set();
+let offlineTask=null;
+function setOfflineLabel(label,title,status='idle'){
+ const button=$('#rrOfflineSave');if(!button)return;
+ button.dataset.state=status;button.dataset.progress=label;
+ button.title=title||label;button.setAttribute('aria-label',title||label);
+ button.disabled=status==='saved';
+}
+async function updateOfflineButton(){
+ if(!state.doc||!window.LireloOffline)return;
+ const doc=state.doc;
+ const count=await window.LireloOffline.pageCount(doc).catch(()=>0);
+ if(state.doc!==doc||offlineTask)return;
+ if(count>=doc.pages)setOfflineLabel('Saved','All '+doc.pages+' pages available offline','saved');
+ else setOfflineLabel('Save offline',count?count+' of '+doc.pages+' pages cached. Save the full book.':'Save all '+doc.pages+' pages for offline reading.');
+}
+async function saveOffline(){
+ if(!state.doc||!state.book)return;
+ if(offlineTask){offlineTask.cancelled=true;return}
+ if(!navigator.onLine){toast('Connect to the internet to download this book.');return}
+ const book=state.book,doc=state.doc,uid=window.LireloApp?.user?.id;
+ if(!uid)return;
+ const task={cancelled:false};offlineTask=task;
+ try{
+  await window.LireloOffline.saveMeta(doc,uid);
+  let saved=await window.LireloOffline.pageCount(doc,uid);
+  setOfflineLabel(saved+'/'+doc.pages,'Downloading '+saved+' of '+doc.pages+' pages. Click to pause.','saving');
+  for(let n=1;n<=doc.pages;n++){
+   if(task.cancelled||!state.active||state.book!==book||window.LireloApp?.user?.id!==uid)break;
+   if(await window.LireloOffline.getPage(doc,n,uid))continue;
+   await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original'));
+   saved++;
+   setOfflineLabel(saved+'/'+doc.pages,'Downloading '+saved+' of '+doc.pages+' pages. Click to pause.','saving');
+   await new Promise(resolve=>setTimeout(resolve,20));
+  }
+  if(saved>=doc.pages)toast('Book saved for offline reading.');
+  else if(task.cancelled)toast('Download paused. Click Save offline to resume.');
+ }catch(e){toast('Offline download stopped: '+e.message)}
+ finally{if(offlineTask===task)offlineTask=null;updateOfflineButton()}
+}
 async function getDocument(b){
   return api('meta?id='+encodeURIComponent(b.id));
 }
@@ -76,13 +139,15 @@ async function open(id,{page=null,pushHistory=true}={}){
  $('#rrBookTitle').textContent=b.title;$('#rrBookSubtitle').textContent='Preparing local reader';
  try{
   const d=await getDocument(b);if(open.token!==token)return;
-  state.doc=d;loadStored();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
+  state.doc=d;loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
   if(d.reflowable&&(state.font!==d.font||state.fontFace!==d.fontface))state.doc=await api(`reflow?id=${encodeURIComponent(d.id)}&size=${state.font}&font=${state.fontFace}`);
-  await initialiseCanvas();renderNavigation();updateMeta();setTab('highlights');
+  await initialiseCanvas();renderNavigation();updateMeta();setTab('highlights');updateOfflineButton();
   if(pushHistory)history.pushState({reader:id},'',`#reader=${encodeURIComponent(id)}`);
  }catch(e){canvas.innerHTML=`<div class="rr-loading"><p>${safe(e.message)}</p><button type="button" class="primary-button" id="rrRetry">Retry</button></div>`;$('#rrRetry')?.addEventListener('click',()=>open(id,{pushHistory:false}));toast(e.message)}
 }
 function close({showDetails=true}={}){
+ if(offlineTask)offlineTask.cancelled=true;
+ if(screen.classList.contains('rr-immersive')){screen.classList.remove('rr-immersive');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});updateFullscreenButton()}
  open.token=Symbol();state.active=false;
  state.observer?.disconnect();state.observer=null;state.pages.clear();state.loading.clear();
  screen.classList.add('hidden');screen.classList.remove('panel-open');$('#app').classList.remove('reader-open');
@@ -90,6 +155,31 @@ function close({showDetails=true}={}){
  else{$('.content-width').classList.remove('hidden')}
 }
 function back(){if(!state.active)return;const id=state.book?.id;history.replaceState({lireloBook:id},'',`#book=${encodeURIComponent(id)}`);close()}
+function updateFullscreenButton(){
+ const on=screen.classList.contains('rr-immersive'),button=$('#rrFullscreen');
+ button.setAttribute('aria-pressed',String(on));
+ button.setAttribute('aria-label',on?'Exit fullscreen reading':'Enter fullscreen reading');
+ button.title=on?'Exit fullscreen reading (Esc)':'Enter fullscreen reading';
+ button.innerHTML=on?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h6V3m12 6h-6V3M3 15h6v6m12-6h-6v6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>';
+}
+async function toggleFullscreen(){
+ if(screen.classList.contains('rr-immersive')){
+  if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});
+  screen.classList.remove('rr-immersive');
+ }else{
+  screen.classList.remove('panel-open');
+  screen.classList.add('rr-immersive');
+  if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen().catch(()=>{});
+ }
+ updateFullscreenButton();
+}
+$('#rrFullscreen').addEventListener('click',toggleFullscreen);
+$('#rrOfflineSave').addEventListener('click',saveOffline);
+document.addEventListener('fullscreenchange',()=>{
+ if(!document.fullscreenElement&&screen.classList.contains('rr-immersive')){
+  screen.classList.remove('rr-immersive');updateFullscreenButton();
+ }
+});
 $('#rrBack').addEventListener('click',back);$('#rrReturn').addEventListener('click',back);
 $('#brandHome').addEventListener('click',()=>{if(state.active){close({showDetails:false});history.replaceState({},'','#library')}},true);
 window.addEventListener('popstate',()=>{if(!state.active)return;const match=location.hash.match(/^#reader=(.+)$/);if(match){const id=decodeURIComponent(match[1]);if(id!==state.book?.id)open(id,{pushHistory:false})}else close({showDetails:location.hash.startsWith('#book=')})});
@@ -232,7 +322,7 @@ $('#rrSearchInput').addEventListener('input',()=>{clearTimeout(searchTimer);cons
 function moveSearch(by){if(!state.search.length)return;state.searchIndex=(state.searchIndex+by+state.search.length)%state.search.length;jump(state.search[state.searchIndex].page).then(paintAll);$('#rrSearchCount').textContent=(state.searchIndex+1)+' / '+state.search.length+' pages'}
 $('#rrSearchPrev').addEventListener('click',()=>moveSearch(-1));$('#rrSearchNext').addEventListener('click',()=>moveSearch(1));
 // Arrow keys, trackpad horizontal scrolling and page dragging are only active in Swipe mode.
-document.addEventListener('keydown',e=>{if(!state.active)return;if(e.key==='Escape'){if($('#rrNoteDialog').open)return;$('#rrSettings').classList.add('hidden');$('#rrQuickJump').classList.add('hidden');screen.classList.remove('panel-open');$('#rrSelectBar').classList.add('hidden');return}
+document.addEventListener('keydown',e=>{if(!state.active)return;if(e.key==='Escape'){if($('#rrNoteDialog').open)return;if(screen.classList.contains('rr-immersive')){toggleFullscreen();return;}$('#rrSettings').classList.add('hidden');$('#rrQuickJump').classList.add('hidden');screen.classList.remove('panel-open');$('#rrSelectBar').classList.add('hidden');return}
  const el=e.target;if(el.closest('input,textarea,select,[contenteditable]')||el.closest('dialog'))return;
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){e.preventDefault();$('#rrSearchbar').classList.remove('hidden');$('#rrSearchInput').focus();return}
  if(['ArrowRight','PageDown'].includes(e.key)&&state.mode==='swipe'){e.preventDefault();jump(state.page+1)}
