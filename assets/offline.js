@@ -47,7 +47,7 @@ async function pageCount(doc,uid=user()){
  const db=await connect(),prefix=docKey(uid,doc.id,sizeFor(doc),fontFor(doc),doc.layout)+':';
  return new Promise((resolve,reject)=>{
   const request=db.transaction('pages').objectStore('pages').getAllKeys(IDBKeyRange.bound(prefix,prefix+'\uffff'));
-  request.onsuccess=()=>resolve(request.result.length);request.onerror=()=>reject(request.error);
+  request.onsuccess=()=>resolve(request.result.filter(key=>/^\d+$/.test(String(key).slice(prefix.length))).length);request.onerror=()=>reject(request.error);
  });
 }
 async function forget(doc,uid=user()){
@@ -57,7 +57,7 @@ async function forget(doc,uid=user()){
  await new Promise((resolve,reject)=>{
   const tx=db.transaction(['pages','books'],'readwrite'),pages=tx.objectStore('pages');
   const cursor=pages.openKeyCursor(IDBKeyRange.bound(prefix,prefix+'\uffff'));
-  cursor.onsuccess=()=>{if(cursor.result){pages.delete(cursor.result.primaryKey);cursor.result.continue()}};
+  cursor.onsuccess=()=>{if(cursor.result){if(/^\d+$/.test(String(cursor.result.primaryKey).slice(prefix.length)))pages.delete(cursor.result.primaryKey);cursor.result.continue()}};
   tx.objectStore('books').delete(docKey(uid,doc.id,sizeFor(doc),fontFor(doc),doc.layout));
   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
  });
