@@ -25,6 +25,10 @@
 <link rel="stylesheet" href="/assets/style-8.css">
 <link rel="stylesheet" href="/assets/style-9.css">
 <link rel="stylesheet" href="/assets/cloud.css">
+  <link rel="stylesheet" href="/assets/reader-enhancements.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
   <div class="app" id="app">
@@ -142,6 +146,8 @@
               <div class="rr-document-title"><span class="rr-document-type" id="rrBookFormat">PDF</span><div><strong id="rrBookTitle">Reader</strong><small id="rrBookSubtitle">A place to read and remember</small></div></div>
             </div>
             <div class="rr-top-actions">
+              <button type="button" class="rr-icon rr-offline-control" id="rrOfflineSave" title="Save this book for offline reading" aria-label="Save this book for offline reading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg></button>
+              <button type="button" class="rr-icon rr-fullscreen-control" id="rrFullscreen" title="Enter fullscreen reading" aria-label="Enter fullscreen reading" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
               <button type="button" class="rr-icon" data-ri="highlighter" id="rrHighlightTool" title="Highlight selected text" aria-label="Highlight selected text"></button>
               <button type="button" class="rr-icon" data-ri="search" id="rrSearchToggle" title="Search inside book" aria-label="Search inside book"></button>
               <button type="button" class="rr-icon" data-ri="bookmark" id="rrBookmark" title="Bookmark current page" aria-label="Bookmark current page"></button>
@@ -191,6 +197,7 @@
   <dialog id="p4EditDialog" class="p4-dialog" aria-labelledby="p4DialogTitle"><div class="p4-dialog-header"><div><p id="p4DialogEyebrow">MY NOTES</p><h2 id="p4DialogTitle">Add a note</h2></div><button type="button" class="p4-dialog-close" id="p4DialogClose" aria-label="Close dialog" data-p4-icon="x"></button></div><form id="p4EntryForm"><div class="p4-dialog-body"><label class="p4-fieldlabel" id="p4DialogBookLabel">Book</label><div class="p4-picker-wrap" id="p4EditBookPicker"><button id="p4EditBookTrigger" type="button" class="p4-picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="p4EditBookMenu"><span id="p4EditBookValue" class="p4-clip">Choose a book</span><span data-p4-icon="chevron-down"></span></button><div id="p4EditBookMenu" class="p4-picker-menu hidden" role="listbox" aria-label="Choose a book"></div></div><label class="p4-fieldlabel" for="p4EntryPage">Page</label><input id="p4EntryPage" name="page" type="number" inputmode="numeric" min="1" value="1" required><small id="p4PageHint">Choose a page within the sample document.</small><div id="p4NoteBox"><label class="p4-fieldlabel" for="p4EntryText">Your note</label><textarea id="p4EntryText" name="note" maxlength="3000" placeholder="What would you like to remember?"></textarea></div></div><div class="p4-dialog-footer"><button type="button" class="p4-outline" id="p4EntryCancel">Cancel</button><button type="submit" class="p4-primary" id="p4EntrySave">Save note</button></div></form></dialog>
   <dialog id="p4DeleteDialog" class="p4-dialog" aria-labelledby="p4DeleteHeading"><div class="p4-dialog-header"><div><p>REMOVE SAVED ITEM</p><h2 id="p4DeleteHeading">Remove this highlight?</h2></div><button type="button" class="p4-dialog-close" id="p4DeleteClose" aria-label="Close dialog" data-p4-icon="x"></button></div><p class="p4-dialog-confirm" id="p4DeleteDescription">This removes the saved item from your local Reader preview.</p><div class="p4-dialog-footer"><button type="button" class="p4-outline" id="p4DeleteCancel">Cancel</button><button type="button" class="p4-danger" id="p4DeleteConfirm">Remove</button></div></dialog>
   <div class="toast hidden" id="toast" role="status"></div>
+<script src="/assets/offline.js"></script>
 <script src="/assets/bridge.js"></script>
 <script src="/assets/script-0.js"></script>
 <script src="/assets/script-1.js"></script>
