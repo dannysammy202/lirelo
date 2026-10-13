@@ -38,10 +38,21 @@ function authScreen(options={}){
  const titles={signin:'Welcome to Lirelo',recover:'Reset your password','set-password':'Choose a new password'};
  const descriptions={signin:'Your reading, all together. Sign in to reach your private library.',recover:'Enter your email address and we’ll send a password reset link.','set-password':'Choose a secure password to return to your reading space.'};
  const emailField=setPassword?'':`<label>Email address<input type="email" id="lcEmail" autocomplete="email" required placeholder="you@example.com"></label>`;
- const passwordField=recovery?'':`<label>${setPassword?'New password':'Password'}<input type="password" id="lcPassword" autocomplete="${setPassword?'new-password':'current-password'}" minlength="${setPassword?8:6}" required placeholder="${setPassword?'At least 8 characters':'Enter your password'}"></label>`;
- const confirmField=setPassword?'<label>Confirm new password<input type="password" id="lcPasswordConfirm" autocomplete="new-password" minlength="8" required placeholder="Repeat your new password"></label>':'';
+ const passwordControl=(id,label,autocomplete,minlength,placeholder)=>`<label for="${id}" class="lc-password-label">${label}</label><div class="lc-password-wrap"><input type="password" id="${id}" autocomplete="${autocomplete}" minlength="${minlength}" required placeholder="${placeholder}"><button type="button" class="lc-password-toggle" data-password-for="${id}" data-password-label="${label.toLowerCase()}" aria-label="Show ${label.toLowerCase()}" aria-pressed="false" title="Show ${label.toLowerCase()}"><svg class="lc-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-5.5 10-5.5S22 12 22 12s-3.5 5.5-10 5.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg><svg class="lc-eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"/><path d="M10.6 6.6A11 11 0 0 1 12 6.5C18.5 6.5 22 12 22 12a14.8 14.8 0 0 1-4 4"/><path d="M6.2 6.8C3.4 8.5 2 12 2 12s3.5 5.5 10 5.5c1 0 2-.1 2.8-.35"/><path d="M10.2 10.2a2.55 2.55 0 0 0 3.6 3.6"/></svg></button></div>`;
+ const passwordField=recovery?'':passwordControl('lcPassword',setPassword?'New password':'Password',setPassword?'new-password':'current-password',setPassword?8:6,setPassword?'At least 8 characters':'Enter your password');
+ const confirmField=setPassword?passwordControl('lcPasswordConfirm','Confirm new password','new-password',8,'Repeat your new password'):'';
  const primary={signin:'Sign in',recover:'Send reset link','set-password':'Save new password'}[mode];
  el.innerHTML=`<main class="lc-auth-card"><img src="/assets/lirelo-imprint.png" alt="Lirelo emblem" class="lc-auth-logo"><h1>${titles[mode]}</h1><p>${descriptions[mode]}</p><form id="lcAuthForm">${emailField}${passwordField}${confirmField}<div id="lcAuthStatus" role="status" aria-live="polite"></div><button type="submit" id="lcLogin">${primary}</button>${mode==='signin'?'<button type="button" id="lcSignup">Create an account</button><button type="button" id="lcForgotPassword" class="lc-text-button">Forgot password?</button>':!setPassword?'<button type="button" id="lcBackToSignIn" class="lc-text-button">Back to sign in</button>':''}</form></main>`;
+ el.querySelectorAll('.lc-password-toggle').forEach(toggle=>toggle.addEventListener('click',()=>{
+  const input=el.querySelector('#'+toggle.dataset.passwordFor);
+  if(!input)return;
+  const visible=input.type==='password';
+  input.type=visible?'text':'password';
+  toggle.setAttribute('aria-pressed',String(visible));
+  const label=(visible?'Hide ':'Show ')+toggle.dataset.passwordLabel;
+  toggle.setAttribute('aria-label',label);
+  toggle.title=label;
+ }));
  const message=(msg,good=false)=>{const status=el.querySelector('#lcAuthStatus');if(!status)return;status.textContent=msg;status.style.color=good?'#416d59':'#AA5B5F'};
  if(options.message)message(options.message,Boolean(options.good));
  const run=async action=>{
