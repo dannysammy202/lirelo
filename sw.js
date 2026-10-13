@@ -1,5 +1,5 @@
 /* Lirelo PWA: only public app-shell files, never private books or authenticated APIs. */
-const VERSION='lirelo-shell-v2';
+const VERSION='lirelo-shell-v3';
 const ASSETS=['/','/index.html','/manifest.webmanifest','/assets/cloud.css','/assets/offline.js','/assets/reader-enhancements.css','/assets/bridge.js','/assets/script-0.js','/assets/script-1.js','/assets/script-2.js','/assets/script-4.js','/assets/script-5.js','/assets/script-6.js','/assets/lirelo-imprint.png',...Array.from({length:10},(_,i)=>'/assets/style-'+i+'.css')];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(VERSION).then(async cache=>{
@@ -17,5 +17,5 @@ self.addEventListener('fetch',event=>{
   return;
  }
  if(!ASSETS.includes(url.pathname))return;
- event.respondWith(caches.match(url.pathname).then(cached=>cached||fetch(req).then(res=>{if(res.ok){const copy=res.clone();caches.open(VERSION).then(c=>c.put(url.pathname,copy))}return res})));
+ event.respondWith(fetch(req).then(res=>{if(res.ok){const copy=res.clone();caches.open(VERSION).then(c=>c.put(url.pathname,copy))}return res}).catch(async()=>await caches.match(url.pathname)||Response.error()));
 });
