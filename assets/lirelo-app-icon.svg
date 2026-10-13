@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Lirelo">
+<rect width="512" height="512" rx="110" fill="#4B4363"/>
+<path d="M110 156c53-18 105-15 146 13v198c-42-25-94-29-146-14V156Z" fill="#FFFCF8"/>
+<path d="M402 156c-53-18-105-15-146 13v198c42-25 94-29 146-14V156Z" fill="#F3ECF5"/>
+<path d="M256 168v199M145 208c29-8 50-5 72 4M145 249c29-8 50-5 72 4M295 212c22-9 46-12 73-5M295 253c22-9 46-12 73-5" stroke="#9D8CAB" stroke-width="9" fill="none" stroke-linecap="round"/>
+<path d="M110 354c52-15 104-11 146 13 42-24 94-28 146-13" stroke="#E8D5C4" stroke-width="10" fill="none" stroke-linecap="round"/>
+</svg>
