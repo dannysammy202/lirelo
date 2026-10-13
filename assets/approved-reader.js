@@ -23,6 +23,7 @@ const ui={
  wake:false,
  wakeLock:null,
  font:18,
+ face:'georgia',
  tab:'contents',
  query:'',
  loaded:null,
@@ -68,6 +69,19 @@ overlay.querySelector('.acr-close').addEventListener('click',hideOverlay);
 function optionMarkup(value,label,sub,ico,active){
  return '<button type="button" class="acr-mode'+(active?' active':'')+'" data-acr-mode="'+value+'" aria-pressed="'+String(active)+'"><span class="acr-mode-icon" aria-hidden="true">'+ico+'</span><span class="acr-mode-text">'+label+'<small>'+sub+'</small></span>'+(active?'<span class="acr-check" aria-hidden="true">✓</span>':'')+'</button>';
 }
+const READING_FONTS={
+ georgia:{label:'Georgia',detail:'Book serif',css:"Georgia, 'Times New Roman', serif"},
+ times:{label:'Times',detail:'Classic serif',css:"'Times New Roman', Times, serif"},
+ arial:{label:'Arial',detail:'Clean sans',css:"Arial, Helvetica, sans-serif"},
+ system:{label:'System',detail:'Device font',css:"-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"}
+};
+function typefaceControls(){
+ return '<div class="acr-section-label">Typeface</div>'+
+ '<div class="acr-typefaces" role="group" aria-label="Reading typeface">'+
+ Object.entries(READING_FONTS).map(([id,f])=>
+ '<button type="button" class="acr-typeface'+(ui.face===id?' active':'')+'" data-acr-face="'+id+'" aria-pressed="'+String(ui.face===id)+'"><span class="acr-typeface-sample" style="font-family:'+f.css+'">Aa</span><strong>'+f.label+'</strong><small>'+f.detail+'</small></button>'
+ ).join('')+'</div>';
+}
 function renderSettings(){
  const doc=state()?.doc;const epub=doc?.format==='epub';
  body.innerHTML='<div class="acr-section-label">Page display</div>'+
@@ -77,7 +91,7 @@ function renderSettings(){
   '<div class="acr-section-label">Reading comfort</div>'+
   '<div class="acr-setting"><span>Night mode</span><button type="button" class="acr-switch'+(ui.night?' on':'')+'" id="acrNight" role="switch" aria-checked="'+String(ui.night)+'" aria-label="Night mode"></button></div>'+
   '<div class="acr-setting"><span>Keep screen awake</span><button type="button" class="acr-switch'+(ui.wake?' on':'')+'" id="acrWake" role="switch" aria-checked="'+String(ui.wake)+'" aria-label="Keep screen awake"></button></div>'+
-  (ui.mode==='reading'?'<div class="acr-setting"><span>Text size</span><div style="display:flex;align-items:center;gap:9px"><button id="acrFontMinus" aria-label="Decrease text size">A−</button><span class="acr-amount" id="acrFontValue">'+ui.font+'px</span><button id="acrFontPlus" aria-label="Increase text size">A+</button></div></div>':'')+
+  (ui.mode==='reading'?'<div class="acr-setting"><span>Text size</span><div style="display:flex;align-items:center;gap:9px"><button id="acrFontMinus" aria-label="Decrease text size">A−</button><span class="acr-amount" id="acrFontValue">'+ui.font+'px</span><button id="acrFontPlus" aria-label="Increase text size">A+</button></div></div>'+typefaceControls():'')+
   '<p class="acr-hint">PDF pages retain their original design. Reading mode uses selectable document text when available; image-only pages stay in document view.</p>';
 }
 function renderMore(){
@@ -119,6 +133,7 @@ function applyTone(){
 function applyReflow(){
  screen.classList.toggle('acr-reflow',ui.mode==='reading');
  screen.style.setProperty('--acr-reading-size',ui.font+'px');
+ screen.style.setProperty('--acr-reading-typeface',READING_FONTS[ui.face]?.css||READING_FONTS.georgia.css);
  updateNativeText();
 }
 function changeMode(mode){
@@ -137,12 +152,13 @@ function changeMode(mode){
 }
 function savePrefs(){
  const uid=window.LireloApp?.user?.id||'device';
- try{localStorage.setItem('lirelo-approved-reader:'+uid,JSON.stringify({font:ui.font,night:ui.night,wake:ui.wake,mode:ui.mode}))}catch{}
+ try{localStorage.setItem('lirelo-approved-reader:'+uid,JSON.stringify({font:ui.font,face:ui.face,night:ui.night,wake:ui.wake,mode:ui.mode}))}catch{}
 }
 function restorePrefs(){
  const uid=window.LireloApp?.user?.id||'device';
  let val=null;try{val=JSON.parse(localStorage.getItem('lirelo-approved-reader:'+uid))}catch{}
  ui.font=Math.max(13,Math.min(28,Number(val?.font)||18));
+ ui.face=Object.hasOwn(READING_FONTS,val?.face)?val.face:'georgia';
  ui.night=!!val?.night;ui.wake=!!val?.wake;
  ui.mode=(val?.mode&&['continuous','single','reading'].includes(val.mode))?val.mode:(state()?.doc?.format==='epub'?'reading':'single');
 }
@@ -169,6 +185,8 @@ body.addEventListener('click',async e=>{
  }
  if(e.target.closest('#acrNight')){ui.night=!ui.night;applyTone();savePrefs();renderSettings();return}
  if(e.target.closest('#acrWake')){ui.wake=!ui.wake;if(ui.wake)await acquireWake();else await releaseWake();savePrefs();renderSettings();return}
+ const fontChoice=e.target.closest('[data-acr-face]');
+ if(fontChoice&&READING_FONTS[fontChoice.dataset.acrFace]){ui.face=fontChoice.dataset.acrFace;applyReflow();savePrefs();renderSettings();return}
  if(e.target.closest('#acrFontMinus,#acrFontPlus')){
   ui.font=Math.max(13,Math.min(28,ui.font+(e.target.closest('#acrFontPlus')?1:-1)));
   applyReflow();savePrefs();renderSettings();return;
