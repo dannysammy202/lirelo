@@ -33,7 +33,7 @@ async function action(store,mode,work){
 const get=(store,key)=>action(store,'readonly',s=>s.get(key));
 const put=(store,row)=>action(store,'readwrite',s=>s.put(row));
 const deleteItem=(store,key)=>action(store,'readwrite',s=>s.delete(key));
-const docKey=(uid,id,size=14,font='original',layout='standard')=>uid+':'+id+':'+size+':'+font+(layout==='mobile'?':mobile':'');
+const docKey=(uid,id,size=14,font='original',layout='standard')=>uid+':'+id+':'+size+':'+font+(layout&&layout!=='standard'?':'+layout:'');
 const pageKey=(uid,id,size,font,page,layout='standard')=>docKey(uid,id,size,font,layout)+':'+page;
 const sizeFor=doc=>Number(doc.font)||14;
 const fontFor=doc=>doc.fontface||'original';
