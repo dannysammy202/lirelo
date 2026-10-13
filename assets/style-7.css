@@ -1,0 +1,132 @@
+
+
+/* Maintain readable Settings controls and supporting cards under Dark workspace. */
+:root[data-lirelo-palette="dark"] #finalScreen .f-row{border-color:#393241}
+:root[data-lirelo-palette="dark"] #finalScreen .f-row-body strong,
+:root[data-lirelo-palette="dark"] #finalScreen .f-profile-overview h2,
+:root[data-lirelo-palette="dark"] #finalScreen .f-book-row-info strong,
+:root[data-lirelo-palette="dark"] #finalScreen .f-stat strong{color:#F2EAF8!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-row-body small,
+:root[data-lirelo-palette="dark"] #finalScreen .f-help,
+:root[data-lirelo-palette="dark"] #finalScreen .f-profile-overview p,
+:root[data-lirelo-palette="dark"] #finalScreen .f-book-row-info small,
+:root[data-lirelo-palette="dark"] #finalScreen .f-stat small{color:#BDAFC8!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-control,
+:root[data-lirelo-palette="dark"] #finalScreen .f-stepper {background:#31293D}
+:root[data-lirelo-palette="dark"] #finalScreen .f-option{color:#C8BAD6}
+:root[data-lirelo-palette="dark"] #finalScreen .f-option[aria-pressed=true]{background:#59476E;color:#fff;box-shadow:0 1px 4px #0B091466}
+:root[data-lirelo-palette="dark"] #finalScreen .f-option:hover:not([aria-pressed=true]){background:#453952;color:#fff}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card{background:#2B2535;color:#D8CAE5;border:1px solid #3D3347}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card h3{color:#F2EAF8}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card p,
+:root[data-lirelo-palette="dark"] #finalScreen .f-side-item{color:#C4B7CF}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card button{color:#D6BDEF}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card button:hover{color:#F3E6FF}
+:root[data-lirelo-palette="dark"] #finalScreen .f-callout,
+:root[data-lirelo-palette="dark"] #finalScreen .f-book-row,
+:root[data-lirelo-palette="dark"] #finalScreen .f-search,
+:root[data-lirelo-palette="dark"] #finalScreen .f-empty {background:#282230;border-color:#403747;color:#DDCFE7}
+:root[data-lirelo-palette="dark"] #finalScreen .f-tag{background:#382F45;border-color:#584862;color:#D8C4E8}
+:root[data-lirelo-palette="dark"] #finalScreen .f-tag-chip{background:#2D2637;border-color:#51435C;color:#E8DCF2}
+:root[data-lirelo-palette="dark"] #finalScreen .f-tag-chip[aria-pressed=true]{background:#75678D;color:#fff}
+:root[data-lirelo-palette="dark"] #finalScreen .f-stepper button{background:#59476E;color:#fff}
+:root[data-lirelo-palette="dark"] #finalScreen .f-stepper output,
+:root[data-lirelo-palette="dark"] #finalScreen .f-meter output{color:#F3EAF9}
+/* Reader page tone. Independent of the workspace appearance setting. */
+:root[data-lirelo-palette="dark"] .toast{background:#483957;color:#FFF;border:1px solid #615172}
+.rr-canvas[data-tone="dark"] {
+  background:#14121A;
+  color:#E8E1F0;
+}
+.rr-canvas[data-tone="dark"] .rr-page {
+  background:#211E27;
+  border-color:#42394C;
+  box-shadow:0 12px 32px rgba(0,0,0,.36);
+}
+.rr-canvas[data-tone="dark"] .rr-page-content,
+.rr-canvas[data-tone="dark"] .rr-page .rr-page-content {
+  background:#211E27;
+}
+.rr-canvas[data-tone="dark"] .rr-page-img:not(.rr-image-only) {
+  filter:invert(1) hue-rotate(180deg);
+}
+.rr-canvas[data-tone="dark"] .rr-page-img.rr-image-only {
+  /* Preserve photos and scanned PDF artwork, rather than invert their colours. */
+  filter:brightness(.88);
+}
+.rr-canvas[data-tone="dark"] .rr-page-num {
+  background:rgba(36,31,43,.94);
+  border-color:#4A4053;
+  color:#E9DFEF;
+}
+.rr-canvas[data-tone="dark"] .rr-loading {color:#D1C5DB}
+.rr-canvas[data-tone="dark"] .rr-marker {
+  mix-blend-mode:normal;
+  background:rgba(172,133,232,.28);
+}
+.rr-canvas[data-tone="dark"] .rr-marker.yellow {background:rgba(239,191,86,.3)}
+.rr-canvas[data-tone="dark"] .rr-marker.search {background:rgba(248,185,64,.45);box-shadow:inset 0 0 0 1px #D9AF62}
+.rr-canvas[data-tone="dark"] .rr-text-layer ::selection {
+  background:#9A79CA9E;
+}
+
+/* Reader left navigation follows the workspace Dark palette. */
+:root[data-lirelo-palette="dark"] #app.reader-open .sidebar {
+  background:#211D29;
+  border-right:1px solid #383141;
+}
+:root[data-lirelo-palette="dark"] #app.reader-open .brand,
+:root[data-lirelo-palette="dark"] #app.reader-open .brand-word,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-title,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-link,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-toc button,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-jump label,
+:root[data-lirelo-palette="dark"] #app.reader-open .profile-copy strong {color:#EDE5F4!important}
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-link.active,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-link:hover,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-toc button.active,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-toc button:hover {background:#382F46!important;color:#F5EDFC!important}
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-small-label,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-toc button span,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-left-count,
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-return-library,
+:root[data-lirelo-palette="dark"] #app.reader-open .profile-copy small {color:#BEAFCD!important}
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-jump input {background:#2A2433!important;color:#F3EBF9!important;border-color:#50465C!important}
+:root[data-lirelo-palette="dark"] #app.reader-open .rr-jump button {background:#75678D}
+:root[data-lirelo-palette="dark"] #app.reader-open .profile {background:transparent}
+:root[data-lirelo-palette="dark"] #app.reader-open .profile:hover {background:#302A3A}
+/* Keep the Reader chrome legible if the separate workspace theme is dark. */
+:root[data-lirelo-palette="dark"] .reader-screen {background:#17151D;color:#F4EEF8}
+:root[data-lirelo-palette="dark"] .rr-topbar,
+:root[data-lirelo-palette="dark"] .rr-tools,
+:root[data-lirelo-palette="dark"] .rr-right,
+:root[data-lirelo-palette="dark"] .rr-bottom {
+  background:#211D29;
+  border-color:#383141;
+}
+:root[data-lirelo-palette="dark"] .rr-icon,
+:root[data-lirelo-palette="dark"] .rr-mode-btn,
+:root[data-lirelo-palette="dark"] .rr-document-title,
+:root[data-lirelo-palette="dark"] .rr-page-indicator,
+:root[data-lirelo-palette="dark"] #rrZoomLabel {color:#F4EEF8}
+:root[data-lirelo-palette="dark"] .rr-icon:hover,
+:root[data-lirelo-palette="dark"] .rr-mode-btn:hover {background:#312A3F}
+:root[data-lirelo-palette="dark"] .rr-page-indicator,
+:root[data-lirelo-palette="dark"] .rr-right-search,
+:root[data-lirelo-palette="dark"] .rr-floating-settings {
+  background:#2A2433;
+  border-color:#443B4D;
+  color:#F4EEF8;
+}
+:root[data-lirelo-palette="dark"] .rr-right-item {
+  background:#292330;border-color:#40364A;color:#F4EEF8;
+}
+:root[data-lirelo-palette="dark"] .rr-right-item footer,
+:root[data-lirelo-palette="dark"] .rr-bottom-line,
+:root[data-lirelo-palette="dark"] .rr-bottom-foot {color:#BFB5C8}
+:root[data-lirelo-palette="dark"] .rr-right-tabs button.active,
+:root[data-lirelo-palette="dark"] .rr-toc-item,
+:root[data-lirelo-palette="dark"] .rr-right-item button:not(.rr-item-remove) {color:#D7C5EE}
+:root[data-lirelo-palette="dark"] .rr-right-tabs button {color:#BDB2C6}
+:root[data-lirelo-palette="dark"] .rr-progress {background:#3C3447}
+

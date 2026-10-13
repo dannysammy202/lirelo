@@ -1,0 +1,52 @@
+
+
+/* Phase 3 interaction review: fixes for the reported controls. */
+#app.reader-open .sidebar .sidebar-fill{display:none!important}
+#app.reader-open .sidebar .reader-left-nav{
+  flex:1 1 auto;min-height:0;overflow:hidden;
+  padding-top:12px;padding-bottom:4px;gap:6px;
+}
+#app.reader-open .sidebar .rr-left-toc{
+  flex:1 1 auto;min-height:32px;max-height:none;overflow-y:auto;
+  overscroll-behavior:contain;
+}
+#app.reader-open .sidebar .rr-jump{
+  flex:0 0 auto;margin-top:6px;padding:13px 8px 4px;
+}
+#app.reader-open .sidebar .rr-jump div{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:7px;align-items:stretch}
+#app.reader-open .sidebar .rr-jump input{box-sizing:border-box;width:100%;height:37px;min-height:37px;line-height:1.2;appearance:textfield;-moz-appearance:textfield;color:#27262A;background:#FFFCF8}
+#app.reader-open .sidebar .rr-jump input::-webkit-inner-spin-button,
+#app.reader-open .sidebar .rr-jump input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#app.reader-open .sidebar .rr-jump button{box-sizing:border-box;width:36px;min-width:36px;height:37px;min-height:37px;cursor:pointer;transition:background-color .15s ease}
+#app.reader-open .sidebar .rr-jump button:hover{background:#75678D}
+#app.reader-open .sidebar .rr-jump button svg{transform:none!important;width:17px;height:17px}
+#app.reader-open .sidebar .rr-return-library{flex:0 0 auto;padding:8px 8px 10px;font-size:11px;text-decoration:none}
+#app.reader-open .sidebar .rr-return-library:hover{text-decoration:underline}
+#app.reader-open .sidebar .rr-jump input:focus-visible,
+#app.reader-open .sidebar .rr-jump button:focus-visible,
+.details-collection-control select:focus-visible{outline:2px solid #75678D;outline-offset:2px}
+/* Keep the approved Book Details layout, refine only the reported select control. */
+.details-collection-line{align-items:center;column-gap:12px;row-gap:5px}
+.details-collection-line label{line-height:1.4;white-space:nowrap}
+.details-collection-control{display:inline-flex;align-items:center;position:relative;flex:0 1 175px;min-width:138px;height:38px}
+.details-collection-control select,
+.details-collection-line .details-collection-control select{
+  box-sizing:border-box;display:block;appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  width:100%;min-width:0;max-width:none;height:38px;
+  padding:0 34px 0 12px;border:1px solid #E7E1E7;border-radius:9px;
+  background:#FFFCF8;color:#27262A;font:500 12px 'DM Sans',sans-serif;
+  cursor:pointer;outline-offset:2px;
+}
+.details-collection-control:hover select{border-color:#B9ADC8}
+.details-collection-chevron{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;display:grid;place-items:center;color:#75678D;pointer-events:none}
+.details-collection-chevron svg{display:block;width:16px;height:16px}
+.details-collection-line .details-collection-hint{font-size:10px;color:#75678D;line-height:1.3}
+@media(max-width:767px){
+ .details-collection-line .details-collection-control{flex:1 1 100%;width:100%;max-width:100%;height:38px}
+ .details-collection-line .details-collection-control select{height:38px;font-size:12px}
+}
+@media(max-height:600px) and (min-width:961px){
+ #app.reader-open .sidebar .reader-left-nav{overflow-y:auto;scrollbar-width:none}
+ #app.reader-open .sidebar .rr-left-toc{min-height:80px;flex:0 0 80px}
+}
+

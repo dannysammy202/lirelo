@@ -1,0 +1,12 @@
+
+
+/* Dark reading tone follows Dark workspace on first use, with per-book overrides. */
+.rr-canvas[data-tone="dark"] {background:#141219!important;color:#EAE3EF}
+.rr-canvas[data-tone="dark"] .rr-page {background:#211D29!important;border-color:#453B4B!important;box-shadow:0 9px 28px rgba(0,0,0,.34)}
+.rr-canvas[data-tone="dark"] .rr-page-content {background:#211D29!important}
+.rr-canvas[data-tone="dark"] .rr-loading {color:#C6B8D1!important}
+.rr-canvas[data-tone="dark"] .rr-page-img:not(.rr-image-only) {filter:invert(0.94) hue-rotate(180deg)}
+.rr-canvas[data-tone="dark"] .rr-page-img.rr-image-only {filter:brightness(.82)}
+.rr-canvas[data-tone="dark"] .rr-page-num {background:#30283E!important;color:#E6DDF1!important;border-color:#534660!important}
+.rr-canvas[data-tone="dark"] .rr-text-frag::selection {background:rgba(177,135,222,.56)!important}
+@media(max-width:760px){.rr-canvas[data-tone="dark"] {background:#141219!important}}

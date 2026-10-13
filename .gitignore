@@ -1,0 +1,19 @@
+# Personal reading documents and local database
+/data/
+*.sqlite3
+*.sqlite3-*
+# Python environments and caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+# Vercel project credentials
+.vercel/
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

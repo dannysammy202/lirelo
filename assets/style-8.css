@@ -1,0 +1,221 @@
+
+/* Lirelo dark theme refinement. Only the dark workspace palette receives these overrides. */
+:root[data-lirelo-palette="dark"]{
+  --lr-dark-base:#17141d;
+  --lr-dark-surface:#211c29;
+  --lr-dark-raised:#292331;
+  --lr-dark-border:#403648;
+  --lr-dark-text:#f4eff8;
+  --lr-dark-secondary:#c8bdd0;
+  --lr-dark-muted:#aa9eb5;
+  --lr-dark-accent:#b9a2d9;
+  --lr-dark-selected:#3b314b;
+  color-scheme:dark;
+}
+:root[data-lirelo-palette="dark"] body,
+:root[data-lirelo-palette="dark"] .workspace,
+:root[data-lirelo-palette="dark"] #mainContent,
+:root[data-lirelo-palette="dark"] #finalScreen,
+:root[data-lirelo-palette="dark"] #phase4Screen,
+:root[data-lirelo-palette="dark"] #detailsScreen {color:var(--lr-dark-text)}
+:root[data-lirelo-palette="dark"] .sidebar,
+:root[data-lirelo-palette="dark"] .toolbar {background:#1e1926;border-color:var(--lr-dark-border)}
+:root[data-lirelo-palette="dark"] .brand,
+:root[data-lirelo-palette="dark"] .brand-word,
+:root[data-lirelo-palette="dark"] .toolbar-title,
+:root[data-lirelo-palette="dark"] #shelfTitle,
+:root[data-lirelo-palette="dark"] .hero h1,
+:root[data-lirelo-palette="dark"] .book-title {color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] .section-right,
+:root[data-lirelo-palette="dark"] #sectionRight,
+:root[data-lirelo-palette="dark"] .result-count,
+:root[data-lirelo-palette="dark"] .hero p,
+:root[data-lirelo-palette="dark"] .book-metadata,
+:root[data-lirelo-palette="dark"] .book-format,
+:root[data-lirelo-palette="dark"] .demo-note,
+:root[data-lirelo-palette="dark"] .toolbar-detail,
+:root[data-lirelo-palette="dark"] .collection-count,
+:root[data-lirelo-palette="dark"] .profile-copy small {color:var(--lr-dark-secondary)!important}
+:root[data-lirelo-palette="dark"] .section-right svg{color:var(--lr-dark-secondary)}
+:root[data-lirelo-palette="dark"] .tab {color:var(--lr-dark-secondary)!important}
+:root[data-lirelo-palette="dark"] .tab.active{color:#dcc9f2!important}
+:root[data-lirelo-palette="dark"] .tab.active:after{background:#ae91d4}
+:root[data-lirelo-palette="dark"] .nav-link.active,
+:root[data-lirelo-palette="dark"] .nav-collection.active{background:var(--lr-dark-selected)!important;color:#f8f3fc!important}
+:root[data-lirelo-palette="dark"] .search{background:#292331!important;border-color:var(--lr-dark-border)!important}
+:root[data-lirelo-palette="dark"] .search input,
+:root[data-lirelo-palette="dark"] .rr-right-search input,
+:root[data-lirelo-palette="dark"] .p4-search input,
+:root[data-lirelo-palette="dark"] .f-search input {
+  background:transparent!important;border:0!important;box-shadow:none!important;color:#f4eff8!important
+}
+:root[data-lirelo-palette="dark"] input::placeholder,
+:root[data-lirelo-palette="dark"] textarea::placeholder {color:#b2a6be!important;opacity:1}
+:root[data-lirelo-palette="dark"] .search kbd{color:#baaacb}
+:root[data-lirelo-palette="dark"] .secondary-button,
+:root[data-lirelo-palette="dark"] .icon-button,
+:root[data-lirelo-palette="dark"] .toolbar-icon{color:var(--lr-dark-text)}
+:root[data-lirelo-palette="dark"] .book-grid.is-list .book-open{background:var(--lr-dark-surface)!important;border-color:var(--lr-dark-border)!important}
+:root[data-lirelo-palette="dark"] .progress{background:#443a4d}
+/* Book details: dark secondary copy and headings remain legible. */
+:root[data-lirelo-palette="dark"] #detailsScreen .details-crumb,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-crumb button,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-meta,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-author,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-by,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-label,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-summary,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-description,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-overview p,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-about p,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-info-grid dt,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-stat small {color:var(--lr-dark-secondary)!important}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-hero h1,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-hero-title,
+:root[data-lirelo-palette="dark"] #detailsScreen h2,
+:root[data-lirelo-palette="dark"] #detailsScreen h3,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-content-row strong {color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-tabs button{color:#bfb1ca!important}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-tabs button.active{color:#d8c7e8!important}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-aside-card,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-note-card,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-highlight,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-note-form {background:var(--lr-dark-surface)!important;border-color:var(--lr-dark-border)!important}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-track,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-bar{background:#4e415b}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-fill{background:#b29bd0}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-content-row{border-color:var(--lr-dark-border)}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-action-icon,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-collection-trigger {background:#2a2433!important;border-color:var(--lr-dark-border)!important;color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-collection-menu,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-more-menu{background:#2a2433!important;border-color:var(--lr-dark-border)!important}
+/* Phase 4 saved items and their filters. */
+:root[data-lirelo-palette="dark"] #phase4Screen h1,
+:root[data-lirelo-palette="dark"] #phase4Screen h2,
+:root[data-lirelo-palette="dark"] #phase4Screen h3,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-card-title,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-stat strong,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-aside-soft h3{color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-hero p,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-subtitle,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-stat span,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-card p,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-card small,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-aside-card p,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-aside-soft p,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-review-label {color:var(--lr-dark-secondary)!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-card,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-stat,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-aside-card,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-empty{background:var(--lr-dark-surface)!important;border-color:var(--lr-dark-border)!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-aside-soft{background:#2b2535!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-search,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-picker-trigger,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-picker-menu {background:#2a2433!important;border-color:var(--lr-dark-border)!important;color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-chip,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-filter{background:#312a3e!important;color:#d8cae5!important;border-color:#4d405b!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-chip[aria-pressed=true],
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-filter.active{background:#67547e!important;color:white!important}
+/* Final settings, data, account, tags and trash. */
+:root[data-lirelo-palette="dark"] #finalScreen .f-card,
+:root[data-lirelo-palette="dark"] #finalScreen .f-empty,
+:root[data-lirelo-palette="dark"] #finalScreen .f-book-row{background:#211d29!important;border-color:var(--lr-dark-border)!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-card-title,
+:root[data-lirelo-palette="dark"] #finalScreen .f-hero h1,
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card h3,
+:root[data-lirelo-palette="dark"] #finalScreen .f-profile-overview h2,
+:root[data-lirelo-palette="dark"] #finalScreen .f-row-body strong {color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-card-description,
+:root[data-lirelo-palette="dark"] #finalScreen .f-subtitle,
+:root[data-lirelo-palette="dark"] #finalScreen .f-help,
+:root[data-lirelo-palette="dark"] #finalScreen .f-breadcrumb,
+:root[data-lirelo-palette="dark"] #finalScreen .f-row-body small,
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card p,
+:root[data-lirelo-palette="dark"] #finalScreen .f-profile-overview p {color:var(--lr-dark-secondary)!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-control,
+:root[data-lirelo-palette="dark"] #finalScreen .f-stepper{background:#31293d!important;border:1px solid #453a50}
+:root[data-lirelo-palette="dark"] #finalScreen .f-option{color:#cdbfdd!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-option[aria-pressed="true"]{background:#65527b!important;color:white!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-option:hover:not([aria-pressed="true"]){background:#4a3d5a!important;color:white!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-callout{background:#2d2735!important;color:#e1d5ea!important;border-color:#4c4055!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card{background:#2b2536!important;border:1px solid #40354e!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card button{color:#ddc9f2!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-search,
+:root[data-lirelo-palette="dark"] #finalScreen .f-input{background:#292330!important;border-color:var(--lr-dark-border)!important;color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-control button:focus-visible{outline-color:#beaad6}
+/* Do not style every tiny action glyph as a filled icon tile. */
+:root[data-lirelo-palette="dark"] #finalScreen .f-ic{background:transparent!important;color:inherit}
+:root[data-lirelo-palette="dark"] #finalScreen .f-heading>.f-ic,
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-card>.f-ic,
+:root[data-lirelo-palette="dark"] #finalScreen .f-soft-icon{background:#352c42!important;color:#d6c5ec!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-row{border-top-color:#403648!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-secondary{background:#292330!important;color:#e5d8f0!important;border-color:#4b4056!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-secondary:hover{background:#3a3048!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-primary{background:#75678d!important;color:#fff!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-primary:hover{background:#8675a0!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-quiet{color:#dac8eb!important}
+/* Dialogs and dropdowns should never revert to light. */
+:root[data-lirelo-palette="dark"] .dialog,
+:root[data-lirelo-palette="dark"] .p4-dialog,
+:root[data-lirelo-palette="dark"] .final-dialog {background:#24202d!important;border-color:#4a3e55!important;color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] .p4-dialog h2,
+:root[data-lirelo-palette="dark"] .final-dialog h2{color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] .p4-dialog p,
+:root[data-lirelo-palette="dark"] .p4-dialog small {color:var(--lr-dark-secondary)!important}
+/* Reader chrome, search inputs and pop-over controls. Reader canvas tone stays independent. */
+:root[data-lirelo-palette="dark"] .rr-searchbar,
+:root[data-lirelo-palette="dark"] .rr-right-top {background:#241e2c!important;border-color:#42384d!important}
+:root[data-lirelo-palette="dark"] .rr-floating-settings,
+:root[data-lirelo-palette="dark"] .rr-quickjump {background:#292231!important;border-color:#4b4057!important;color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] .rr-floating-settings label,
+:root[data-lirelo-palette="dark"] .rr-range-row output,
+:root[data-lirelo-palette="dark"] .rr-settings-hint,
+:root[data-lirelo-palette="dark"] .rr-quickjump label {color:var(--lr-dark-secondary)!important}
+:root[data-lirelo-palette="dark"] .rr-prototype-note {background:#342b41!important;color:#d9c7eb!important}
+:root[data-lirelo-palette="dark"] .rr-right-search,
+:root[data-lirelo-palette="dark"] .rr-searchbar input {background:#2c2535!important;border-color:#493c55!important;color:var(--lr-dark-text)!important}
+:root[data-lirelo-palette="dark"] .rr-right-tabs button{color:#c2b4cd!important}
+:root[data-lirelo-palette="dark"] .rr-right-tabs button.active{color:#e0c7f5!important}
+:root[data-lirelo-palette="dark"] .rr-right-item{background:#292331!important;border-color:#463a50!important;color:#efe7f5!important}
+:root[data-lirelo-palette="dark"] .rr-right-item p,
+:root[data-lirelo-palette="dark"] .rr-right-item footer{color:#dfd3e8!important}
+:root[data-lirelo-palette="dark"] .rr-right-filter button{background:#322a3e!important;color:#e5d7f0!important;border-color:#59496a!important}
+:root[data-lirelo-palette="dark"] .rr-bottom-line,
+:root[data-lirelo-palette="dark"] .rr-bottom-foot{color:#cabed4!important}
+/* A dark PDF page uses a softened inversion. Scans retain their original image palette. */
+.rr-canvas[data-tone="dark"] .rr-page{background:#201d28!important;border-color:#484050!important}
+.rr-canvas[data-tone="dark"] .rr-page-content{background:#201d28!important}
+.rr-canvas[data-tone="dark"] .rr-page-img:not(.rr-image-only){filter:invert(.90) hue-rotate(180deg)}
+.rr-canvas[data-tone="dark"] .rr-page-img.rr-image-only{filter:brightness(.82)}
+.rr-canvas[data-tone="dark"] .rr-page-num{background:#2b2633ed!important;color:#dfd6e8!important;border-color:#504457!important}
+/* Reduced motion and system colour hints. */
+:root[data-lirelo-palette="dark"] {scrollbar-color:#4a3b5a #1b1622}
+
+
+/* Keep one top-level workspace screen visible after switching navigation sections. */
+#app.phase4-open .content-width,
+#app.final-open .content-width,
+#app.reader-open .content-width{display:none!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-progress{background:#4c4057!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-progress div{background:#a98ec8!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-progress+span{color:#cebddd!important}
+:root[data-lirelo-palette="dark"] #finalScreen [style*="color:#40344D"],
+:root[data-lirelo-palette="dark"] #finalScreen [style*="color:#655678"]{color:#f0e5f9!important}
+:root[data-lirelo-palette="dark"] #finalScreen [style*="color:#928593"]{color:#c6b9d0!important}
+:root[data-lirelo-palette="dark"] #finalScreen .f-meter output{color:#e7d9f4!important}
+
+
+/* Reader panel filters, source navigation and metadata in Dark workspace. */
+:root[data-lirelo-palette="dark"] .rr-tag-filters button{
+ background:#332a40!important;color:#e5d9ef!important;border-color:#574766!important
+}
+:root[data-lirelo-palette="dark"] .rr-tag-filters button.active{
+ background:#655078!important;color:#fff!important;border-color:#86709d!important
+}
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-copy,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-value,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-progress-stat,
+:root[data-lirelo-palette="dark"] #detailsScreen .details-meta-line{color:#c3b7cd!important}
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-breadcrumb,
+:root[data-lirelo-palette="dark"] #phase4Screen .p4-breadcrumb strong{color:#baaccc!important}

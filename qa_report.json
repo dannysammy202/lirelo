@@ -1,0 +1,27 @@
+{
+  "result": "passed",
+  "document_engine": {
+    "count": 22,
+    "tested": [
+      "PDF import", "EPUB import", "PDF chapters", "EPUB chapters",
+      "real PDF page rendering", "real EPUB page rendering", "selectable text extraction",
+      "document text search", "scanned PDF image rendering",
+      "no fabricated searchable text for scanned pages", "EPUB reflow and typography",
+      "metadata updates", "persistent library list", "Trash and restoration",
+      "permanent deletion", "persistence across server restart"
+    ]
+  },
+  "browser_ui": {
+    "result": "passed",
+    "tested": [
+      "Library and Book Details navigation", "real PDF page rendering",
+      "note creation from Book Details", "bookmark creation in Reader",
+      "note creation in Reader", "highlight from actual selected text",
+      "dark Reader tone", "Highlights workspace navigation",
+      "Settings theme selection", "desktop 1440 by 900", "tablet 900 by 1100",
+      "mobile 390 by 844"
+    ],
+    "javascript_errors": 0,
+    "method": "Chromium DOM with API requests forwarded to the local Lirelo service. Direct browser URL navigation was restricted in the execution environment."
+  }
+}
