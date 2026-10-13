@@ -69,10 +69,14 @@ async function load(){
  const rows=await db('lirelo_reading_state?select=book_id,data');
  const profiles=await db('lirelo_profiles?select=display_name,preferences,collections');
  const profile=profiles[0]||null;
+ const cloudName=profile?.display_name?.trim()||state.user.email.split('@')[0];
  state.suppress=true;
  try{rows.forEach(row=>{if(!state.books.some(b=>b.id===row.book_id))return;localStorage.setItem('lirelo-reader-v3-standalone:'+row.book_id,JSON.stringify(row.data));});if(profile){if(profile.preferences)localStorage.setItem('lirelo-complete-preferences-v1',JSON.stringify(profile.preferences));if(profile.display_name)localStorage.setItem('lirelo-complete-profile-v1',JSON.stringify({name:profile.display_name}));}}
  finally{state.suppress=false;}
- if(final){final.trash.splice(0,final.trash.length,...state.books.filter(b=>b.trashed));if(profile){if(profile.preferences){Object.assign(final.preferences,profile.preferences);document.documentElement.dataset.lireloPalette=final.preferences.palette||'classic';}if(profile.display_name){final.profile.name=profile.display_name;document.querySelector('.profile-copy strong').textContent=profile.display_name;const initials=profile.display_name.split(/\s+/).slice(0,2).map(p=>p.charAt(0)).join('').toUpperCase();document.querySelector('.profile-avatar').textContent=initials;document.getElementById('topProfile').textContent=initials;}}}
+ if(final){final.trash.splice(0,final.trash.length,...state.books.filter(b=>b.trashed));if(profile){if(profile.preferences){Object.assign(final.preferences,profile.preferences);document.documentElement.dataset.lireloPalette=final.preferences.palette||'classic';}final.profile.name=cloudName;document.querySelector('.profile-copy strong').textContent=cloudName;const initials=cloudName.split(/\s+/).slice(0,2).map(p=>p.charAt(0)).join('').toUpperCase();document.querySelector('.profile-avatar').textContent=initials;document.getElementById('topProfile').textContent=initials;}}
+ if(final&&!profile){final.profile.name=cloudName;document.querySelector('.profile-copy strong').textContent=cloudName;const initials=cloudName.split(/\s+/).slice(0,2).map(p=>p.charAt(0)).join('').toUpperCase();document.querySelector('.profile-avatar').textContent=initials;document.getElementById('topProfile').textContent=initials;}
+ document.querySelector('.profile-copy small').textContent=state.user.email;
+ document.querySelector('.profile-copy small').title=state.user.email;
  lib.renderCollectionsNav();lib.render();
  if(location.hash.startsWith('#book='))window.LireloBookDetails?.open(decodeURIComponent(location.hash.slice(6)),{pushHistory:false});
  if(location.hash.startsWith('#reader='))window.LireloReader?.open(decodeURIComponent(location.hash.slice(8)),{pushHistory:false});
@@ -120,9 +124,22 @@ function deleteNote(id,noteId){const key='lirelo-reader-v3-standalone:'+id;let d
 function syncTrash(trashed){const gone=new Set(trashed.map(b=>b.id));for(const b of state.books){const value=gone.has(b.id);if(value===b.trashed)continue;b.trashed=value;defer('trash:'+b.id,()=>db('lirelo_books?id=eq.'+encodeURIComponent(b.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:value})}),200);}}
 async function removeForever(id){const b=state.books.find(x=>x.id===id);if(!b)return;await db('lirelo_books?id=eq.'+encodeURIComponent(id),{method:'DELETE'});await fetch(URL+'/storage/v1/object/'+BUCKET+'/'+b.storage_path,{method:'DELETE',headers:authHeaders(null)});state.books=state.books.filter(b=>b.id!==id);localStorage.removeItem('lirelo-reader-v3-standalone:'+id);}
 function saveCollections(_list){saveProfile()} // Cloud profile stores custom collections; book assignments stay in their own records.
-async function signOut(){state.suppress=true;for(const key of Object.keys(localStorage))if(key.startsWith('lirelo-reader-v3-standalone:')||key.startsWith('lirelo-reader-progress:'))localStorage.removeItem(key);state.suppress=false;const token=state.session?.access_token;state.session=null;state.user=null;state.ready=false;localStorage.removeItem(SESSION);if(token)fetch(URL+'/auth/v1/logout',{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+token}}).catch(()=>{});location.hash='';location.reload()}
+async function signOut(){
+ if(!state.session)return;
+ state.suppress=true;
+ // Clear any cached data from this account so the next signer-in never sees it.
+ for(const key of Object.keys(localStorage)){
+  if(key.startsWith('lirelo-reader-v3-standalone:')||key.startsWith('lirelo-reader-progress:')||
+     ['lirelo-complete-profile-v1','lirelo-complete-preferences-v1','lirelo-complete-tags-v1','lirelo-complete-trash-v1',SESSION].includes(key)) localStorage.removeItem(key);
+ }
+ state.suppress=false;
+ const token=state.session.access_token;state.session=null;state.user=null;state.ready=false;
+ // Clear the local session immediately, regardless of network availability.
+ await fetch(URL+'/auth/v1/logout',{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+token}}).catch(()=>{});
+ location.replace(location.pathname+location.search);
+}
 function addAccountControl(){
- const b=document.createElement('button');b.type='button';b.id='lcSignOut';b.className='lc-sign-out';b.textContent='Sign out';b.addEventListener('click',signOut);
+ const b=document.createElement('button');b.type='button';b.id='lcSignOut';b.className='lc-sign-out';b.textContent='Sign out';b.addEventListener('click',()=>window.LireloFinal?.requestSignOut?.());
  document.querySelector('.sidebar-profile')?.appendChild(b);
  document.getElementById('demoNote')?.remove();document.querySelector('.details-demo-foot')?.remove();document.querySelector('.p4-review-label')?.remove();
 }
