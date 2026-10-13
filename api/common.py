@@ -38,9 +38,19 @@ def download_book(path,token,uid):
 
 def load_document(data,kind,size=14,face='original',layout='standard'):
     if kind not in ('pdf','epub'):raise ValueError('Unsupported document type.')
-    if kind=='epub' and face in ('serif','sans'):
-        family='serif' if face=='serif' else 'sans-serif'
-        injection='<style>body,p,div,span,li,blockquote,h1,h2,h3,h4,h5,h6{font-family:'+family+' !important}</style>'
+    if kind=='epub' and (face in ('serif','sans') or layout=='mobile-v2'):
+        rules=[]
+        if face in ('serif','sans'):
+            family='serif' if face=='serif' else 'sans-serif'
+            rules.append('body,p,div,span,li,blockquote,h1,h2,h3,h4,h5,h6{font-family:'+family+' !important}')
+        if layout=='mobile-v2':
+            # Prevent the excessive word spacing and publisher side margins seen on phones.
+            rules.append('html,body{margin:0!important;padding:0!important;max-width:100%!important}')
+            rules.append('body{padding:0 13px!important}')
+            rules.append('p,li,blockquote,div,section,article{text-align:left!important;word-spacing:normal!important;hyphens:auto!important}')
+            rules.append('p,blockquote,li{margin-left:0!important;margin-right:0!important;line-height:1.5!important}')
+            rules.append('h1,h2,h3{word-spacing:normal!important}')
+        injection='<style>'+' '.join(rules)+'</style>'
         source=io.BytesIO(data);output=io.BytesIO()
         with zipfile.ZipFile(source) as src,zipfile.ZipFile(output,'w') as dst:
             for item in src.infolist():
@@ -58,7 +68,7 @@ def load_document(data,kind,size=14,face='original',layout='standard'):
     if doc.needs_pass:raise ValueError('Password-protected books are not supported.')
     if doc.is_reflowable:
         # Phone EPUB is typeset at reading-device dimensions instead of scaling a 620px desktop page.
-        if layout=='mobile':doc.layout(width=360,height=660,fontsize=size)
+        if layout.startswith('mobile'):doc.layout(width=360,height=660,fontsize=size)
         else:doc.layout(width=620,height=830,fontsize=size)
     return doc
 
@@ -131,7 +141,7 @@ def execute(handler,action):
             face=param('font','original')
             if face not in ('original','serif','sans'):face='original'
             layout=param('layout','standard')
-            if layout not in ('standard','mobile'):layout='standard'
+            if layout not in ('standard','mobile','mobile-v2'):layout='standard'
             if kind!='epub':layout='standard'
             content=download_book(book['storage_path'],token,uid)
             doc=load_document(content,kind,size,face,layout)
