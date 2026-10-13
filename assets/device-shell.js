@@ -26,6 +26,16 @@ $('mainContent').insertBefore(home,app.querySelector('.content-width'));
 const savedTabs=document.createElement('nav');savedTabs.id='lrSavedTabs';savedTabs.setAttribute('aria-label','Saved items');
 savedTabs.innerHTML=`<button type="button" data-lr-saved="highlights">${icon('highlighter')}<span>Highlights</span></button><button type="button" data-lr-saved="notes">${icon('note')}<span>Notes</span></button><button type="button" data-lr-saved="bookmarks">${icon('bookmark')}<span>Bookmarks</span></button>`;
 $('phase4Screen')?.prepend(savedTabs);
+const readerScrim=document.createElement('button');
+readerScrim.type='button';
+readerScrim.id='lrReaderScrim';
+readerScrim.setAttribute('aria-label','Close reading tools');
+readerScrim.setAttribute('title','Close reading tools');
+$('readerScreen').appendChild(readerScrim);
+readerScrim.addEventListener('click',()=>{
+ $('rrSheetClose')?.click();
+ $('readerScreen')?.classList.remove('panel-open');
+});
 const actions=app.querySelector('.rr-top-actions');
 if(actions){
  const more=document.createElement('button');more.type='button';more.id='lrReaderMore';more.className='rr-icon';more.setAttribute('aria-label','More reading tools');more.setAttribute('aria-expanded','false');more.innerHTML=icon('more');actions.appendChild(more);
