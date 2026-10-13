@@ -12,10 +12,10 @@ $('#readerLeft').querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=ico(el
 const screen=$('#readerScreen'),canvas=$('#rrCanvas'),list=$('#rrRightList');
 const small=()=>innerWidth<=760||((innerWidth<=1180||(innerWidth<=1366&&matchMedia('(pointer:coarse)').matches))&&matchMedia('(orientation:landscape)').matches);
 const phone=()=>matchMedia('(max-width:767px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)').matches;
-const layoutArg=()=>state.doc?.layout==='mobile'?'&layout=mobile':'';
+const layoutArg=()=>state.doc?.layout?.startsWith('mobile')?'&layout='+encodeURIComponent(state.doc.layout):'';
 const state={active:false,book:null,doc:null,page:1,mode:'scroll',zoom:100,font:14,fontFace:'original',tone:'light',tonePinned:false,tab:'highlights',filter:'',tag:'all',annotations:{highlights:[],notes:[],bookmarks:[]},selection:null,search:[],searchIndex:0,offset:0,searchTerm:'',pages:new Map(),loading:new Set(),observer:null,drag:null,hideRight:false,restore:false};
 const standardKey=()=>`lirelo-reader-v3-standalone:${state.book?.id}`;
-const key=()=>standardKey()+(state.doc?.layout==='mobile'?':mobile':'');
+const key=()=>standardKey()+(state.doc?.layout?.startsWith('mobile')?':'+state.doc.layout:'');
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const currentChapter=page=>{const toc=state.doc?.toc||[];return [...toc].reverse().find(t=>t.page<=page)?.title||'Introduction';};
 const displayPage=()=>state.doc?`${state.page} / ${state.doc.pages}`:'1 / 1';
@@ -29,7 +29,7 @@ async function api(path,opts){
   const font=params.get('font')||'original';
   const layout=params.get('layout')||'standard';
   const cached=()=>offline.getMeta(id,size,font,uid,layout);
-  if(!navigator.onLine){const doc=await cached()||(layout==='mobile'?await offline.getMeta(id,14,'original',uid):null);if(doc)return doc;throw new Error('This book is not saved offline. Connect to the internet and use Save offline.')}
+  if(!navigator.onLine){const doc=await cached()||(layout==='mobile-v2'?await offline.getMeta(id,18,'original',uid,'mobile'):null)||(layout.startsWith('mobile')?await offline.getMeta(id,14,'original',uid):null);if(doc)return doc;throw new Error('This book is not saved offline. Connect to the internet and use Save offline.')}
   try{const doc=await live();await offline.saveMeta(doc,uid).catch(e=>console.warn('Offline metadata:',e));return doc}
   catch(e){const doc=await cached();if(doc)return doc;throw e}
  }
@@ -47,7 +47,7 @@ async function api(path,opts){
 }
 
 function mirrorPhoneAnnotations(){
- if(state.doc?.layout!=='mobile')return;
+ if(!state.doc?.layout?.startsWith('mobile'))return;
  let desktop;try{desktop=JSON.parse(localStorage.getItem(standardKey()))||{}}catch{desktop={}}
  desktop.annotations ||= {highlights:[],notes:[],bookmarks:[]};
  const total=Math.max(1,Number(desktop.pages)||Number(state.book?.pages)||1);
@@ -75,13 +75,13 @@ function persist(){
   mirrorPhoneAnnotations();
  }catch(err){if(err?.name==='QuotaExceededError')toast('Browser storage is full. Changes will remain until you close this tab.')}
 }
-function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const fromStandard=state.doc?.layout==='mobile';let base=null;if(fromStandard){try{base=JSON.parse(localStorage.getItem(standardKey()))}catch{}}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,phone()?300:175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
+function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()))}catch{}const fromStandard=state.doc?.layout?.startsWith('mobile');let base=null;if(fromStandard){try{base=JSON.parse(localStorage.getItem(standardKey()))}catch{}}const pref=window.LireloFinal?.preferences||{};const darkWorkspace=document.documentElement.dataset.lireloPalette==='dark';const preferredTone=['light','paper','dark'].includes(pref.tone)?pref.tone:'light';const initialTone=darkWorkspace&&!pref.toneExplicit?'dark':preferredTone;state.tonePinned=Boolean(raw?.tonePinned);state.annotations={highlights:[],notes:[],bookmarks:[]};if(raw){for(const k of Object.keys(state.annotations))state.annotations[k]=Array.isArray(raw.annotations?.[k])?raw.annotations[k]:[];state.page=clamp(Number(raw.page)||1,1,state.doc.pages);state.offset=clamp(Number(raw.offset)||0,0,1);state.mode=raw.mode==='swipe'?'swipe':'scroll';state.zoom=clamp(Number(raw.zoom)||100,75,phone()?300:175);state.font=clamp(Number(raw.font)||14,10,22);state.fontFace=['original','serif','sans'].includes(raw.fontFace)?raw.fontFace:'original';state.tone=state.tonePinned&&['light','paper','dark'].includes(raw.tone)?raw.tone:initialTone}else{
   state.page=state.book.id==='everyday'?4:1;state.offset=0;state.mode='scroll';state.zoom=100;state.font=Number.isFinite(+pref.size)?clamp(+pref.size,10,22):14;state.fontFace=['original','serif','sans'].includes(pref.font)?pref.font:'original';state.mode=pref.mode==='swipe'?'swipe':'scroll';state.tone=initialTone;
-  if(state.doc?.layout==='mobile'){
+  if(state.doc?.layout?.startsWith('mobile')){
    // Preserve the original desktop positions; mobile reading has a separate pagination.
    const lastProgress=clamp(Number(state.book?.progress)||0,0,100);
    state.page=clamp(Math.max(1,Math.round((lastProgress/100)*state.doc.pages)),1,state.doc.pages);
-   state.mode='swipe';state.zoom=100;state.font=18;
+   state.mode='swipe';state.zoom=100;state.font=17;
    if(base?.annotations){for(const kind of ['notes','bookmarks','highlights'])state.annotations[kind]=(base.annotations[kind]||[]).map(item=>({...item,page:clamp(Math.round((Number(item.page)||1)/Math.max(1,Number(base.pages)||Number(state.book?.pages)||1)*state.doc.pages),1,state.doc.pages),rects:[]}));}
   }
   if(state.book.id==='everyday'){
@@ -99,7 +99,7 @@ function loadStored(){let raw=null;try{raw=JSON.parse(localStorage.getItem(key()
     state.annotations.bookmarks=[{id:'sample-b1',page:5,title:'Reading for understanding',chapter:'Reading for understanding',created:1730000001000}];
   }
  }
- if(state.doc?.layout==='mobile'&&base?.annotations){
+ if(state.doc?.layout?.startsWith('mobile')&&base?.annotations){
   const total=Math.max(1,Number(base.pages)||Number(state.book?.pages)||1);
   for(const kind of ['notes','bookmarks','highlights']){
    const present=new Set(state.annotations[kind].map(item=>item.id));
@@ -123,7 +123,7 @@ function updateMeta(){if(!state.doc)return;updateFullscreenPage();
  $('#rrFontSize').value=state.font;$('#rrFontValue').textContent=state.font+' pt';$('#rrPageTone').value=state.tone;$('#rrFontFace').value=state.fontFace;
  $('#rrZoomOut').disabled=state.zoom<=75;$('#rrZoomIn').disabled=state.zoom>=(phone()?300:175);$('#rrPrevious').disabled=state.page<=1;$('#rrNext').disabled=state.page>=state.doc.pages;
  screen.classList.toggle('rr-phone-zoom',phone()&&state.doc.format==='pdf'&&state.zoom>100);
- screen.classList.toggle('rr-phone-epub',phone()&&state.doc.layout==='mobile');
+ screen.classList.toggle('rr-phone-epub',phone()&&state.doc.layout?.startsWith('mobile'));
  canvas.style.setProperty('--rr-zoom',state.zoom/100);canvas.style.setProperty('--rr-base',Math.max(260,Math.min(small()?620:650,canvas.clientWidth-(small()?16:48)))+'px');canvas.dataset.tone=state.tone;canvas.dataset.mode=state.mode;
  const saved=state.annotations.bookmarks.some(b=>b.page===state.page);$('#rrBookmark').setAttribute('aria-pressed',String(saved));
  $('#rrJump').max=state.doc.pages;
@@ -169,7 +169,7 @@ async function saveOffline(){
    if(await window.LireloOffline.getPage(doc,n,uid))continue;
    let downloaded=false;
    try{
-    const batch=await window.LireloApp.request('batch?id='+encodeURIComponent(doc.id)+'&start='+n+'&count='+Math.min(3,doc.pages-n+1)+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original')+(doc.layout==='mobile'?'&layout=mobile':''));
+    const batch=await window.LireloApp.request('batch?id='+encodeURIComponent(doc.id)+'&start='+n+'&count='+Math.min(3,doc.pages-n+1)+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original')+(doc.layout?.startsWith('mobile')?'&layout='+encodeURIComponent(doc.layout):''));
     if(!Array.isArray(batch.pages)||!batch.pages.length)throw new Error('Empty download batch');
     for(const data of batch.pages){
      if(task.cancelled||window.LireloApp?.user?.id!==uid)break;
@@ -182,7 +182,7 @@ async function saveOffline(){
    }catch(e){
     if(e?.name==='QuotaExceededError')throw new Error('Device storage is full. Free some space and resume the download.');
     // Older deployments and oversized scanned pages fall back to a single page.
-    await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original')+(doc.layout==='mobile'?'&layout=mobile':''));
+    await api('page?id='+encodeURIComponent(doc.id)+'&page='+n+'&size='+(doc.font||14)+'&font='+(doc.fontface||'original')+(doc.layout?.startsWith('mobile')?'&layout='+encodeURIComponent(doc.layout):''));
     if(!await window.LireloOffline.getPage(doc,n,uid))throw new Error('Unable to store page '+n+' for offline use.');
     saved++;
    }
@@ -196,7 +196,7 @@ async function saveOffline(){
  finally{if(offlineTask===task)offlineTask=null;updateOfflineButton()}
 }
 async function getDocument(b){
-  return api('meta?id='+encodeURIComponent(b.id)+(b.format==='epub'&&phone()?'&layout=mobile&size=18':''));
+  return api('meta?id='+encodeURIComponent(b.id)+(b.format==='epub'&&phone()?'&layout=mobile-v2&size=17':''));
 }
 
 async function open(id,{page=null,pushHistory=true}={}){
@@ -209,7 +209,7 @@ async function open(id,{page=null,pushHistory=true}={}){
  $('#rrBookTitle').textContent=b.title;$('#rrBookSubtitle').textContent='Preparing local reader';
  try{
   const d=await getDocument(b);if(open.token!==token)return;
-  state.doc=d;screen.classList.toggle('rr-phone-epub',phone()&&d.layout==='mobile');loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
+  state.doc=d;screen.classList.toggle('rr-phone-epub',phone()&&d.layout?.startsWith('mobile'));loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);
   if(d.reflowable&&(state.font!==d.font||state.fontFace!==d.fontface))state.doc=await api(`reflow?id=${encodeURIComponent(d.id)}&size=${state.font}&font=${state.fontFace}${layoutArg()}`);
   await initialiseCanvas();renderNavigation();updateMeta();setTab('highlights');updateOfflineButton();
   if(pushHistory)history.pushState({reader:id},'',`#reader=${encodeURIComponent(id)}`);
@@ -312,7 +312,7 @@ async function prefetchPage(n,doc){
  if(!state.active||!doc||state.doc!==doc||n<1||n>doc.pages||state.pages.has(n)||prefetching.has(n))return;
  prefetching.add(n);
  try{
-  const result=await api(`page?id=${encodeURIComponent(doc.id)}&page=${n}&size=${doc.font||14}&font=${doc.fontface||'original'}${doc.layout==='mobile'?'&layout=mobile':''}`);
+  const result=await api(`page?id=${encodeURIComponent(doc.id)}&page=${n}&size=${doc.font||14}&font=${doc.fontface||'original'}${doc.layout?.startsWith('mobile')?'&layout='+encodeURIComponent(doc.layout):''}`);
   if(state.active&&state.doc===doc)state.pages.set(n,result);
  }catch(err){console.warn('Page prefetch:',err.message)}
  finally{prefetching.delete(n)}
