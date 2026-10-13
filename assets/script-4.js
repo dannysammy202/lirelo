@@ -268,9 +268,27 @@ async function ensurePage(n){if(!state.active||!state.doc||n<1||n>state.doc.page
  }catch(e){holder.innerHTML=`<div class="rr-loading">Unable to load page ${n}. <button type="button" class="secondary-button" data-retry="${n}">Retry</button></div>`;holder.querySelector('button')?.addEventListener('click',()=>ensurePage(n))}
  finally{state.loading.delete(n);trimPages()}
 }
+const prefetching=new Set();
+async function prefetchPage(n,doc){
+ if(!state.active||!doc||state.doc!==doc||n<1||n>doc.pages||state.pages.has(n)||prefetching.has(n))return;
+ prefetching.add(n);
+ try{
+  const result=await api(`page?id=${encodeURIComponent(doc.id)}&page=${n}&size=${doc.font||14}&font=${doc.fontface||'original'}${doc.layout==='mobile'?'&layout=mobile':''}`);
+  if(state.active&&state.doc===doc)state.pages.set(n,result);
+ }catch(err){console.warn('Page prefetch:',err.message)}
+ finally{prefetching.delete(n)}
+}
+function trimSwipeCache(){
+ if(state.mode!=='swipe'||state.pages.size<=14)return;
+ for(const n of state.pages.keys())if(Math.abs(n-state.page)>5)state.pages.delete(n);
+}
 async function swipeRender(){const stack=$('#rrPageStack');if(!stack)return;
  const n=state.page;stack.innerHTML=`<article class="rr-page" id="rr-page-${n}" data-page="${n}"><div class="rr-page-content"><div class="rr-loading">Loading page ${n}...</div></div></article>`;
- await ensurePage(n);canvas.scrollTop=0;
+ await ensurePage(n);canvas.scrollTop=0;trimSwipeCache();
+ if(state.active&&state.doc){const doc=state.doc;
+  // Prefetch only the next page after rendering; this does not hold up page navigation.
+  Promise.resolve().then(()=>prefetchPage(n+1,doc));
+ }
 }
 function scrollToPage(n,offset=0){const node=$(`#rr-page-${n}`);if(node){canvas.scrollTo({top:Math.max(0,node.offsetTop-$('#rrPageStack').offsetTop-16+offset*node.offsetHeight),behavior:'instant'})}}
 let lastScroll=0;
