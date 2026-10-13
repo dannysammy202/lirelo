@@ -35,8 +35,13 @@
  .reader-screen .rr-top-actions .rr-icon{width:31px}
  .reader-screen .rr-topbar{padding-inline:8px}
 }
+/* Fit pages on narrow screens at 100% while retaining deliberate zooming. */
+@media(max-width:760px){
+ .reader-screen .rr-page{width:calc(min(650px, calc(100vw - 24px)) * var(--rr-zoom,1));min-width:0}
+ .reader-screen .rr-page-stack{width:max-content;min-width:100%}
+}
 /* Tablet and phone landscape: use the short screen for reading, not permanent sidebars. */
-@media (orientation:landscape) and (max-width:1180px), (orientation:landscape) and (max-height:640px){
+@media (orientation:landscape) and (max-width:1180px), (orientation:landscape) and (max-width:1366px) and (pointer:coarse), (orientation:landscape) and (max-height:640px){
  #app.reader-open .sidebar{display:none!important}
  #app.reader-open{display:block}
  #app.reader-open .workspace{height:100dvh;min-height:0}
