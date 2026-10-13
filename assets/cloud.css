@@ -19,3 +19,7 @@
 .profile-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:135px}
 :root[data-lirelo-palette=dark] .lc-account-identity strong{color:#F4EFF8}
 :root[data-lirelo-palette=dark] #fProfileMenu .lc-menu-sign-out{color:#F4BDC1}
+
+/* Secondary account recovery action. */
+.lc-auth-card button.lc-text-button{background:transparent;color:#75678D;border:0;height:auto;min-height:42px;margin-top:7px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.lc-auth-card button.lc-text-button:hover{color:#4B4363;background:#F7F4EE}
