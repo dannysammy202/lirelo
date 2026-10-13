@@ -36,7 +36,7 @@ def download_book(path,token,uid):
     encoded=urllib.parse.quote(path,safe='/')
     return fetch(SUPABASE_URL+'/storage/v1/object/authenticated/lirelo-private/'+encoded,token)
 
-def load_document(data,kind,size=14,face='original'):
+def load_document(data,kind,size=14,face='original',layout='standard'):
     if kind not in ('pdf','epub'):raise ValueError('Unsupported document type.')
     if kind=='epub' and face in ('serif','sans'):
         family='serif' if face=='serif' else 'sans-serif'
@@ -56,7 +56,10 @@ def load_document(data,kind,size=14,face='original'):
         data=output.getvalue()
     doc=fitz.open(stream=data,filetype=kind)
     if doc.needs_pass:raise ValueError('Password-protected books are not supported.')
-    if doc.is_reflowable:doc.layout(width=620,height=830,fontsize=size)
+    if doc.is_reflowable:
+        # Phone EPUB is typeset at reading-device dimensions instead of scaling a 620px desktop page.
+        if layout=='mobile':doc.layout(width=360,height=660,fontsize=size)
+        else:doc.layout(width=620,height=830,fontsize=size)
     return doc
 
 def toc(doc):
@@ -64,8 +67,8 @@ def toc(doc):
     if not items and doc.page_count:items=[{'depth':1,'title':f'Page {n}','page':n} for n in range(1,doc.page_count+1,max(1,doc.page_count//8))]
     return items
 
-def metadata(doc,id,kind,size=14,face='original'):
-    return dict(id=id,name=id,format=kind,pages=doc.page_count,toc=toc(doc),reflowable=bool(doc.is_reflowable),font=size,fontface=face)
+def metadata(doc,id,kind,size=14,face='original',layout='standard'):
+    return dict(id=id,name=id,format=kind,pages=doc.page_count,toc=toc(doc),reflowable=bool(doc.is_reflowable),font=size,fontface=face,layout=layout if doc.is_reflowable else 'standard')
 
 def inspect(data,kind):
     doc=load_document(data,kind)
@@ -127,10 +130,13 @@ def execute(handler,action):
             size=min(22,max(10,int(param('size','14'))))
             face=param('font','original')
             if face not in ('original','serif','sans'):face='original'
+            layout=param('layout','standard')
+            if layout not in ('standard','mobile'):layout='standard'
+            if kind!='epub':layout='standard'
             content=download_book(book['storage_path'],token,uid)
-            doc=load_document(content,kind,size,face)
+            doc=load_document(content,kind,size,face,layout)
             try:
-                if action in ('meta','reflow'):result=metadata(doc,id,kind,size,face)
+                if action in ('meta','reflow'):result=metadata(doc,id,kind,size,face,layout)
                 elif action=='page':result=page_data(doc,int(param('page','1')))
                 elif action=='batch':
                     first=int(param('start','1'))
