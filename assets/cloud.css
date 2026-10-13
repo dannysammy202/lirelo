@@ -23,3 +23,15 @@
 /* Secondary account recovery action. */
 .lc-auth-card button.lc-text-button{background:transparent;color:#75678D;border:0;height:auto;min-height:42px;margin-top:7px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .lc-auth-card button.lc-text-button:hover{color:#4B4363;background:#F7F4EE}
+
+/* Password visibility controls across sign-in, sign-up and reset. */
+.lc-auth-card label.lc-password-label{margin-bottom:7px}
+.lc-password-wrap{position:relative;margin-bottom:15px}
+.lc-auth-card .lc-password-wrap input{margin-top:0;padding-right:50px}
+.lc-auth-card button.lc-password-toggle{position:absolute;top:4px;right:4px;width:36px;height:36px;display:grid;place-items:center;padding:0;margin:0;border:0;border-radius:7px;background:transparent;color:#75678D}
+.lc-auth-card button.lc-password-toggle:hover{background:#EFEAF3}
+.lc-auth-card button.lc-password-toggle:focus-visible{outline:2px solid #75678D;outline-offset:2px}
+.lc-password-toggle svg{display:block;width:19px;height:19px}
+.lc-password-toggle .lc-eye-off-icon{display:none}
+.lc-password-toggle[aria-pressed="true"] .lc-eye-icon{display:none}
+.lc-password-toggle[aria-pressed="true"] .lc-eye-off-icon{display:block}
