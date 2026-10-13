@@ -31,24 +31,49 @@ async function access(){
  return state.session.access_token;
 }
 async function db(path,options={}){await access();return http('/rest/v1/'+path,options)}
-function authScreen(){
+function authScreen(options={}){
  let el=document.getElementById('lireloCloudAuth');if(!el){el=document.createElement('div');el.id='lireloCloudAuth';document.body.appendChild(el)}
- el.innerHTML=`<main class="lc-auth-card"><img src="/assets/lirelo-imprint.png" alt="Lirelo emblem" class="lc-auth-logo"><h1>Welcome to Lirelo</h1><p>Your reading, all together. Sign in to reach your private library.</p><form id="lcAuthForm"><label>Email address<input type="email" id="lcEmail" autocomplete="email" required placeholder="you@example.com"></label><label>Password<input type="password" id="lcPassword" autocomplete="current-password" minlength="6" required placeholder="Enter your password"></label><div id="lcAuthStatus" role="status"></div><button type="submit" id="lcLogin">Sign in</button><button type="button" id="lcSignup">Create an account</button></form></main>`;
- const message=(msg,good=false)=>{const s=document.getElementById('lcAuthStatus');s.textContent=msg;s.style.color=good?'#4F9371':'#AA5B5F'};
- const run=async mode=>{
-  if(state.busy)return;state.busy=true;
-  const email=document.getElementById('lcEmail').value.trim(),password=document.getElementById('lcPassword').value;
-  if(!email||!password){message('Enter an email address and password.');state.busy=false;return;}
-  const buttons=[document.getElementById('lcLogin'),document.getElementById('lcSignup')];buttons.forEach(b=>b.disabled=true);
+ const mode=options.mode||'signin';
+ const recovery=mode==='recover',setPassword=mode==='set-password';
+ const titles={signin:'Welcome to Lirelo',recover:'Reset your password','set-password':'Choose a new password'};
+ const descriptions={signin:'Your reading, all together. Sign in to reach your private library.',recover:'Enter your email address and we’ll send a password reset link.','set-password':'Choose a secure password to return to your reading space.'};
+ const emailField=setPassword?'':`<label>Email address<input type="email" id="lcEmail" autocomplete="email" required placeholder="you@example.com"></label>`;
+ const passwordField=recovery?'':`<label>${setPassword?'New password':'Password'}<input type="password" id="lcPassword" autocomplete="${setPassword?'new-password':'current-password'}" minlength="${setPassword?8:6}" required placeholder="${setPassword?'At least 8 characters':'Enter your password'}"></label>`;
+ const confirmField=setPassword?'<label>Confirm new password<input type="password" id="lcPasswordConfirm" autocomplete="new-password" minlength="8" required placeholder="Repeat your new password"></label>':'';
+ const primary={signin:'Sign in',recover:'Send reset link','set-password':'Save new password'}[mode];
+ el.innerHTML=`<main class="lc-auth-card"><img src="/assets/lirelo-imprint.png" alt="Lirelo emblem" class="lc-auth-logo"><h1>${titles[mode]}</h1><p>${descriptions[mode]}</p><form id="lcAuthForm">${emailField}${passwordField}${confirmField}<div id="lcAuthStatus" role="status" aria-live="polite"></div><button type="submit" id="lcLogin">${primary}</button>${mode==='signin'?'<button type="button" id="lcSignup">Create an account</button><button type="button" id="lcForgotPassword" class="lc-text-button">Forgot password?</button>':!setPassword?'<button type="button" id="lcBackToSignIn" class="lc-text-button">Back to sign in</button>':''}</form></main>`;
+ const message=(msg,good=false)=>{const status=el.querySelector('#lcAuthStatus');if(!status)return;status.textContent=msg;status.style.color=good?'#416d59':'#AA5B5F'};
+ if(options.message)message(options.message,Boolean(options.good));
+ const run=async action=>{
+  if(state.busy)return;
+  const email=el.querySelector('#lcEmail')?.value.trim();
+  const password=el.querySelector('#lcPassword')?.value;
+  if(!setPassword&&!email){message('Enter your email address.');return;}
+  if(!recovery&&(!password||password.length<(action==='signin'?6:8))){message(action==='signin'?'Enter your password.':'Use a password with at least eight characters.');return;}
+  if(setPassword&&password!==el.querySelector('#lcPasswordConfirm').value){message('Your passwords do not match.');return;}
+  state.busy=true;el.querySelectorAll('button').forEach(btn=>btn.disabled=true);
   try{
-   const route=mode==='signup'?'/auth/v1/signup?redirect_to='+encodeURIComponent(location.origin):'/auth/v1/token?grant_type=password';
-   const value=await http(route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})},false);
-   if(value.access_token){saveSession(value);state.user=value.user;await load();el.remove();document.getElementById('app').classList.add('lc-ready');}
-   else message('Check your email for a confirmation link. Return here and sign in after confirming.',true);
-  }catch(e){message(e.message)}finally{state.busy=false;buttons.forEach(b=>b.disabled=false)}
+   if(action==='recover'){
+    await http('/auth/v1/recover?redirect_to='+encodeURIComponent(location.origin),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})},false);
+    message('If this email has a Lirelo account, a password reset link will arrive shortly.',true);
+   }else if(action==='set-password'){
+    await access();
+    await http('/auth/v1/user',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});
+    const user=await http('/auth/v1/user');state.user=user;
+    await load();el.remove();document.getElementById('app').classList.add('lc-ready');
+    window.LireloLibrary?.toast?.('Password updated. Welcome back to Lirelo.');
+   }else{
+    const route=action==='signup'?'/auth/v1/signup?redirect_to='+encodeURIComponent(location.origin):'/auth/v1/token?grant_type=password';
+    const value=await http(route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})},false);
+    if(value.access_token){saveSession(value);state.user=value.user;await load();el.remove();document.getElementById('app').classList.add('lc-ready');}
+    else message('Check your inbox for the confirmation link. Once confirmed, you can sign in here.',true);
+   }
+  }catch(e){message(e.message)}finally{state.busy=false;el.querySelectorAll('button').forEach(btn=>btn.disabled=false)}
  };
- el.querySelector('form').addEventListener('submit',e=>{e.preventDefault();run('signin')});
- el.querySelector('#lcSignup').addEventListener('click',()=>run('signup'));
+ el.querySelector('form').addEventListener('submit',e=>{e.preventDefault();run(mode)});
+ el.querySelector('#lcSignup')?.addEventListener('click',()=>run('signup'));
+ el.querySelector('#lcForgotPassword')?.addEventListener('click',()=>authScreen({mode:'recover'}));
+ el.querySelector('#lcBackToSignIn')?.addEventListener('click',()=>authScreen({mode:'signin'}));
 }
 async function service(path,options={}){
  const token=await access();
@@ -145,8 +170,25 @@ function addAccountControl(){
 }
 async function initialise(){
  addAccountControl();
- try{const s=JSON.parse(localStorage.getItem(SESSION)||'null');if(s?.access_token&&s.refresh_token){state.session=s;if(s.expires_at-Date.now()/1000<90)await refresh();if(state.session){const user=await http('/auth/v1/user');if(user?.id){state.user=user;await load();document.getElementById('app').classList.add('lc-ready');return;}}}}
- catch(e){console.warn('Sign-in check:',e.message)}
+ // Supabase email links return sessions in the URL fragment in its implicit flow.
+ // Consume these before any book/reader routes and remove the sensitive tokens from history.
+ const fragment=new URLSearchParams(location.hash.slice(1));
+ const isCallback=fragment.has('access_token')||fragment.has('error');
+ if(isCallback){
+  const token=fragment.get('access_token'),refreshToken=fragment.get('refresh_token'),type=fragment.get('type');
+  const callbackError=fragment.get('error_description')||fragment.get('error');
+  history.replaceState(null,'',location.pathname+location.search);
+  if(callbackError){authScreen({mode:'signin',message:callbackError.replaceAll('+',' ')});return;}
+  if(token&&refreshToken){
+   saveSession({access_token:token,refresh_token:refreshToken,expires_in:Number(fragment.get('expires_in')||3600),token_type:fragment.get('token_type')||'bearer'});
+   if(type==='recovery'){authScreen({mode:'set-password'});return;}
+  }
+ }
+ try{const session=JSON.parse(localStorage.getItem(SESSION)||'null');if(session?.access_token&&session.refresh_token){
+  state.session=session;
+  if(session.expires_at-Date.now()/1000<90)await refresh();
+  if(state.session){const user=await http('/auth/v1/user');if(user?.id){state.user=user;await load();document.getElementById('app').classList.add('lc-ready');return;}}
+ }}catch(e){console.warn('Sign-in check:',e.message)}
  authScreen();
 }
 window.LireloApp={ready,load,importBook,updateBook,updateProgress,saveNote,deleteNote,savedAnnotations,syncTrash,removeForever,saveCollections,request:service,signOut,get user(){return state.user}};
