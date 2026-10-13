@@ -30,7 +30,7 @@ const actions=app.querySelector('.rr-top-actions');
 if(actions){
  const more=document.createElement('button');more.type='button';more.id='lrReaderMore';more.className='rr-icon';more.setAttribute('aria-label','More reading tools');more.setAttribute('aria-expanded','false');more.innerHTML=icon('more');actions.appendChild(more);
  const sheet=document.createElement('div');sheet.id='lrReaderSheet';sheet.hidden=true;
- sheet.innerHTML=`<p>Reading tools</p><button type="button" data-lr-reader-action="rrSearchToggle">${icon('search')} Find in book</button><button type="button" data-lr-reader-action="rrOfflineSave">${icon('book-open')} Save for offline</button><button type="button" data-lr-reader-action="rrAddNote">${icon('note')} Add note</button><button type="button" data-lr-reader-action="rrHighlightTool">${icon('highlighter')} Highlight text</button><button type="button" data-lr-reader-action="rrPanelToggle">${icon('bookmark')} Contents & saved items</button>`;
+ sheet.innerHTML=`<p>Reading tools</p><button type="button" data-lr-reader-action="rrSearchToggle">${icon('search')} Find in book</button><button type="button" data-lr-reader-action="rrOfflineSave">${icon('book-open')} Save for offline</button><button type="button" data-lr-reader-action="rrAddNote">${icon('note')} Add note</button><button type="button" data-lr-reader-action="rrHighlightTool">${icon('highlighter')} Highlight text</button><button type="button" data-lr-reader-action="rrPanelToggle">${icon('bookmark')} Contents & saved items</button><button type="button" data-lr-reader-action="rrSettingsToggle">${icon('sliders')} Reading preferences</button>`;
  $('readerScreen').append(sheet);
  more.addEventListener('click',()=>{sheet.hidden=!sheet.hidden;more.setAttribute('aria-expanded',String(!sheet.hidden))});
  sheet.addEventListener('click',e=>{const b=e.target.closest('[data-lr-reader-action]');if(!b)return;sheet.hidden=true;more.setAttribute('aria-expanded','false');$(b.dataset.lrReaderAction)?.click()});
@@ -44,7 +44,7 @@ function libraryHome(){
 }
 function go(next){
  if(!device())return;
- if(next==='home'||next==='library'){libraryHome();tab=next}
+ if(next==='home'||next==='library'){libraryHome();tab=next;origin=next}
  else if(next==='saved'){if(window.LireloFinal?.state?.active)window.LireloFinal.leave();window.LireloPhase4?.enter('highlights');tab='saved'}
  else if(next==='account'){if(window.LireloPhase4?.state?.active)window.LireloPhase4.leave();window.LireloFinal?.enter('account');tab='account'}
  searchOpen=false;search.hidden=true;
@@ -95,6 +95,7 @@ $('lrDeviceSearchInput').addEventListener('input',e=>{
 });
 $('lrDeviceAddButton').addEventListener('click',()=>$('fileInput')?.click());
 $('lrDeviceAccountButton').addEventListener('click',()=>go('account'));
+$('fileInput')?.addEventListener('change',()=>{tab='library';origin='library';scheduleSync()},true);
 savedTabs.addEventListener('click',e=>{const b=e.target.closest('[data-lr-saved]');if(!b)return;window.LireloPhase4?.enter(b.dataset.lrSaved);tab='saved';sync()});
 function sync(){
  if(!device())return;
