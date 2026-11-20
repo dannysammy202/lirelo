@@ -119,7 +119,7 @@ async function load(offlineSnapshot=null){
  if(final&&!profile){final.profile.name=cloudName;document.querySelector('.profile-copy strong').textContent=cloudName;const initials=cloudName.split(/\s+/).slice(0,2).map(p=>p.charAt(0)).join('').toUpperCase();document.querySelector('.profile-avatar').textContent=initials;document.getElementById('topProfile').textContent=initials;}
  document.querySelector('.profile-copy small').textContent=state.user.email;
  document.querySelector('.profile-copy small').title=state.user.email;
- lib.renderCollectionsNav();lib.render();
+ lib.renderCollectionsNav();lib.render();window.LireloPhase4?.render();
  if(location.hash.startsWith('#book='))window.LireloBookDetails?.open(decodeURIComponent(location.hash.slice(6)),{pushHistory:false});
  if(location.hash.startsWith('#reader='))window.LireloReader?.open(decodeURIComponent(location.hash.slice(8)),{pushHistory:false});
  state.ready=true;readyResolve();

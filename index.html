@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F7F8FC">
+  <meta name="theme-color" content="#F7F7F2">
   <meta name="description" content="Lirelo. Your reading, all together.">
   <title>Lirelo | Your reading workspace</title>
   <link rel="icon" type="image/svg+xml" href="/assets/lirelo-app-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400;500;600;700;800&family=Literata:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Newsreader:opsz,wght@6..72,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/style-0.css">
   <link rel="stylesheet" href="/assets/style-1.css">
   
@@ -26,9 +26,6 @@
 <link rel="stylesheet" href="/assets/style-9.css">
 <link rel="stylesheet" href="/assets/cloud.css">
   <link rel="stylesheet" href="/assets/reader-enhancements.css">
-  <link rel="stylesheet" href="/assets/device-shell.css">
-  <link rel="stylesheet" href="/assets/mobile-reader.css">
-  <link rel="stylesheet" href="/assets/approved-reader.css">
   <link rel="stylesheet" href="/assets/reading-workspace.css">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/assets/lirelo-app-icon-192.png">
@@ -78,14 +75,28 @@
     </aside>
 
     <div class="workspace">
+      <header class="room-header">
+        <button type="button" class="room-brand" data-room-route="library" aria-label="Lirelo library">Lirelo</button>
+        <nav class="room-nav" aria-label="Workspace">
+          <button type="button" data-room-route="library" aria-current="page">Library</button>
+          <button type="button" data-room-route="notebook">Notebook</button>
+          <button type="button" data-room-route="account">Manage</button>
+        </nav>
+        <button class="room-primary" type="button" id="roomImport"><span data-icon="plus"></span> Import</button>
+      </header>
       <header class="toolbar"><div class="toolbar-left"><button class="mobile-menu icon-button" type="button" id="mobileMenu" aria-label="Open navigation" data-icon="menu"></button><span class="toolbar-title">Library</span><span class="toolbar-separator"></span><span class="toolbar-detail">Your reading, all together.</span></div>
         <div class="toolbar-actions"><button class="toolbar-icon icon-button" type="button" id="searchShortcut" data-icon="search" aria-label="Search your library" title="Search"><span></span></button><span class="toolbar-rule"></span><button class="avatar-button" type="button" id="topProfile" aria-label="Open account menu">JD</button></div>
       </header>
 
       <main class="main-content" id="mainContent" tabindex="-1">
         <div class="content-width">
-          <div class="page-heading"><div><p class="page-eyebrow">YOUR READING SPACE</p><h1 id="viewTitle">Library</h1><p class="page-subtitle" id="viewSubtitle"></p></div><button type="button" id="addBooks" class="primary-button"><span data-icon="plus"></span> Add books</button></div>
-          <section id="libraryResume" class="library-resume-slot" aria-label="Continue reading" hidden></section>
+          <div class="page-heading"><div><p class="page-eyebrow">YOUR READING SPACE</p><h1 id="viewTitle">Your library</h1><p class="page-subtitle" id="viewSubtitle"></p></div><button type="button" id="addBooks" class="primary-button"><span data-icon="plus"></span> Add books</button></div>
+          <div class="room-library-lead">
+            <section id="libraryResume" class="library-resume-slot" aria-label="Continue reading" hidden></section>
+            <aside class="room-collections" aria-labelledby="roomCollectionsTitle">
+              <div><h2 id="roomCollectionsTitle">Collections</h2><button id="roomNewCollection" type="button" aria-label="New collection"><span data-icon="plus"></span></button></div>
+            </aside>
+          </div>
           <div class="section-heading library-shelf-heading"><div><h2 id="shelfTitle">Your books</h2><p id="resultCount" class="result-count" aria-live="polite"></p></div></div>
           <div class="library-controls">
           <div class="tab-bar" role="tablist" aria-label="Book format" id="formatTabs">
@@ -95,6 +106,7 @@
             <button type="button" class="tab" role="tab" aria-selected="false" data-format="collections">Collections</button>
           </div>
             <div class="library-controls-actions">
+              <button type="button" class="room-reading" id="roomReadingNow" data-room-route="reading"><span data-icon="clock"></span> Reading now</button>
               <label id="sectionRight" class="library-sort"><span>Sort</span><select id="sortButton" aria-label="Sort books"><option value="recent">Recently added</option><option value="title">Title A–Z</option><option value="progress">Reading progress</option></select></label>
               <div class="library-views" role="group" aria-label="Library layout">
                 <button type="button" id="viewToggle" class="icon-button" data-icon="layout-grid" aria-label="Grid view" aria-pressed="true"></button>
@@ -103,6 +115,7 @@
             </div>
           </div>
           <section class="shelf" aria-label="Your books">
+            <div class="room-index-head" aria-hidden="true"><span>Title</span><span>Format</span><span>Progress</span></div>
             <div id="bookGrid" class="book-grid" aria-live="polite"></div>
             <div class="empty hidden" id="emptyState"><span class="empty-icon" data-icon="book-open"></span><h3>No books here yet</h3><p id="emptyExplanation">Add a PDF or EPUB to start your library.</p><button type="button" class="secondary-button" id="emptyAdd">Add a book</button></div>
           </section>
@@ -142,6 +155,15 @@
           <div class="p4-hero"><div><p class="p4-eyebrow">YOUR READING, REMEMBERED</p><h1 id="p4Title">Highlights</h1><p class="p4-subtitle" id="p4Subtitle">A home for the passages you want to keep.</p></div><button type="button" class="p4-primary" id="p4Create"><span data-p4-icon="plus"></span><span id="p4CreateLabel">Highlight a passage</span></button></div>
           <div class="p4-stats" id="p4Stats"></div>
           <div class="p4-workspace">
+            <aside class="room-notebook-index" aria-label="Filter notebook">
+              <nav class="room-notebook-nav" aria-label="Entry type">
+                <button type="button" data-room-note="all"><span data-icon="library"></span> All entries <small></small></button>
+                <button type="button" data-room-note="highlights"><span data-icon="highlighter"></span> Highlights <small></small></button>
+                <button type="button" data-room-note="notes"><span data-icon="note"></span> Notes <small></small></button>
+                <button type="button" data-room-note="bookmarks"><span data-icon="bookmark"></span> Bookmarks <small></small></button>
+              </nav>
+              <h2>By book</h2><div id="roomNotebookBooks"></div>
+            </aside>
             <div class="p4-main-col">
               <div class="p4-tools">
                 <label class="p4-search"><span data-p4-icon="search"></span><input id="p4Search" type="search" placeholder="Search saved passages" aria-label="Search saved items" autocomplete="off"></label>
@@ -160,6 +182,10 @@
             <div class="rr-top-left">
               <button type="button" class="rr-icon rr-back" id="rrBack" aria-label="Back to book details" data-ri="arrow-left"></button>
               <div class="rr-document-title"><span class="rr-document-type" id="rrBookFormat">PDF</span><div><strong id="rrBookTitle">Reader</strong><small id="rrBookSubtitle">A place to read and remember</small></div></div>
+            </div>
+            <div class="room-reader-nav">
+              <button type="button" id="roomReaderContents" aria-expanded="false" aria-controls="rrRightPanel"><span data-icon="menu"></span><span>Contents</span></button>
+              <button type="button" id="roomReaderNotebook" aria-expanded="false" aria-controls="rrRightPanel"><span data-icon="note"></span><span>Notebook</span></button>
             </div>
             <div class="rr-top-actions">
               <button type="button" class="rr-icon rr-offline-control" id="rrOfflineSave" title="Save this book for offline reading" aria-label="Save this book for offline reading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg></button>
@@ -182,10 +208,25 @@
               <div class="rr-searchbar hidden" id="rrSearchbar"><span data-ri="search"></span><input id="rrSearchInput" type="search" placeholder="Find a word or phrase in this book" aria-label="Search document"><span id="rrSearchCount"></span><button type="button" id="rrSearchPrev" class="rr-icon" data-ri="arrow-left" aria-label="Previous search result"></button><button type="button" id="rrSearchNext" class="rr-icon" data-ri="arrow-right" aria-label="Next search result"></button><button type="button" class="rr-icon" id="rrSearchClose" data-ri="x" aria-label="Close search"></button></div>
               <form id="rrQuickJump" class="rr-quickjump hidden"><label for="rrQuickPage">Go to page</label><div><input id="rrQuickPage" type="number" min="1" required placeholder="Page number"><button type="submit">Go</button></div></form>
               <div class="rr-canvas" id="rrCanvas" tabindex="0" aria-label="Document pages"><div class="rr-loading">Preparing the reader...</div></div>
+              <nav class="room-dock" aria-label="Page controls">
+                <div class="room-paging"></div>
+                <details class="room-popover" id="roomZoom">
+                  <summary aria-label="Zoom"><span data-icon="search"></span><span id="roomZoomValue">100%</span></summary>
+                  <div class="room-popover-body room-zoom-body"></div>
+                </details>
+                <div class="room-bookmark"></div>
+                <details class="room-popover" id="roomReaderMore">
+                  <summary aria-label="More reading tools"><span data-icon="more"></span></summary>
+                  <div class="room-popover-body room-reader-tools">
+                    <button type="button" id="lrReaderMore" aria-expanded="false"><span data-icon="reading"></span> Reading modes</button>
+                  </div>
+                </details>
+              </nav>
               <div class="rr-bottom"><div class="rr-bottom-line"><span id="rrChapterMeta">Reading workspace</span><span id="rrProgressText">0% read</span></div><div class="rr-progress"><div id="rrProgressFill"></div></div><div class="rr-bottom-foot"><span id="rrDocMetadata"></span><span id="rrPageBottom">Page 1</span></div></div>
               <div class="rr-select-bar hidden" id="rrSelectBar"><span>Text selected</span><button type="button" id="rrSelectionHighlight"><span data-ri="highlighter"></span> Highlight</button><button type="button" id="rrSelectionNote"><span data-ri="note"></span> Add note</button></div>
               <div class="rr-floating-settings hidden" id="rrSettings"><div class="rr-settings-title">Reading preferences</div><label for="rrReadingMode">Reading mode</label><select id="rrReadingMode"><option value="scroll">Vertical scroll</option><option value="swipe">Horizontal pages</option></select><label for="rrFontSize">EPUB font size</label><div class="rr-range-row"><input type="range" id="rrFontSize" min="10" max="22" value="14"><output id="rrFontValue">14 pt</output></div><label for="rrFontFace">EPUB typography</label><select id="rrFontFace"><option value="original">Book typography</option><option value="serif">Serif</option><option value="sans">Sans serif</option></select><label for="rrPageTone">Canvas tone</label><select id="rrPageTone"><option value="light">White</option><option value="paper">Paper</option><option value="dark">Dark</option></select><div class="rr-settings-hint">PDF fonts follow the original file. EPUB font size reflows the document.</div></div>
             </section>
+            <button type="button" id="roomReaderScrim" aria-label="Close reading panel" tabindex="-1"></button>
             <aside id="rrRightPanel" class="rr-right" aria-label="Reading annotations">
               <div class="rr-sheet-handle"></div><div class="rr-right-top"><div class="rr-right-tabs" role="tablist" aria-label="Reader sections"><button data-rr-tab="contents" role="tab" aria-selected="false">Contents</button><button data-rr-tab="highlights" role="tab" class="active" aria-selected="true">Highlights</button><button data-rr-tab="notes" role="tab" aria-selected="false">Notes</button><button data-rr-tab="bookmarks" role="tab" aria-selected="false">Bookmarks</button></div><button type="button" id="rrSheetClose" data-ri="x" class="rr-icon rr-sheet-close" aria-label="Close panel"></button></div>
               <div class="rr-right-search"><span data-ri="search"></span><input id="rrFilter" placeholder="Search highlights..." type="search" aria-label="Filter annotations"></div>
@@ -199,7 +240,15 @@
 <section class="hidden" id="finalScreen" aria-labelledby="fTitle">
  <div class="f-breadcrumb"><span>My reading space</span><span class="f-ic" data-ficon="arrow-right"></span><strong id="fCrumb">Settings</strong></div>
  <div class="f-hero"><div><p class="f-eyebrow" id="fEyebrow">YOUR READING SPACE</p><h1 id="fTitle">Settings</h1><p class="f-subtitle" id="fSubtitle">A few details, set the way you like to read.</p></div><button class="f-secondary hidden" id="fHeroAction" type="button"></button></div>
- <div id="fContent"></div>
+ <div class="room-manage">
+   <nav aria-label="Manage Lirelo">
+     <button type="button" data-room-route="account"><span data-icon="user"></span> Account</button>
+     <button type="button" data-room-route="settings"><span data-icon="sliders"></span> Preferences</button>
+     <button type="button" data-room-route="tags"><span data-icon="tag"></span> Tags</button>
+     <button type="button" data-room-route="trash"><span data-icon="trash"></span> Trash</button>
+   </nav>
+   <div id="fContent"></div>
+ </div>
 </section>
 </main>
     </div>
@@ -235,7 +284,7 @@
 <dialog class="final-dialog" id="fConfirmDialog" aria-labelledby="fConfirmTitle"><p class="f-eyebrow">PLEASE CONFIRM</p><h2 id="fConfirmTitle">Confirm action</h2><p id="fConfirmDescription">Review this change before confirming.</p><div class="f-dialog-actions"><button class="f-secondary" type="button" id="fConfirmCancel">Cancel</button><button class="f-danger" type="button" id="fConfirmProceed">Confirm</button></div></dialog>
 <input type="file" id="fImportInput" accept="application/json,.json" class="hidden" aria-label="Choose Lirelo backup JSON">
 <script src="/assets/script-6.js"></script>
-<script src="/assets/device-shell.js"></script>
+<script src="/assets/room-shell.js"></script>
 <script src="/assets/approved-reader.js"></script>
 </body>
 </html>

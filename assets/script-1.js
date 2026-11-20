@@ -8,9 +8,9 @@
   const svg = name => window.LireloIconsax.svg(name);
   $$('[data-icon]').forEach(node => node.innerHTML = svg(node.dataset.icon));
   const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const state = {books:[],section:'library',format:'all',query:'',sort:'recent',layout:'grid',collections:['Personal','Work','Learning','Favourites'],newId:0};
+  const state = {books:[],section:'library',format:'all',query:'',sort:'recent',layout:'list',collections:['Personal','Work','Learning','Favourites'],newId:0};
   let toastTimer;
-  const labels = {library:['Library',''],reading:['Reading now','Pick up where you left off.'],highlights:['Highlights','Passages worth remembering.'],bookmarks:['Bookmarks','The pages you want to return to.'],notes:['Notes','Your thoughts and ideas, together.'],tags:['Tags','Find books by topic.'],all:['All books','Your complete personal library.'],trash:['Trash','Recently removed books.']};
+  const labels = {library:['Your library',''],reading:['Reading now','Pick up where you left off.'],highlights:['Highlights','Passages worth remembering.'],bookmarks:['Bookmarks','The pages you want to return to.'],notes:['Notes','Your thoughts and ideas, together.'],tags:['Tags','Find books by topic.'],all:['All books','Your complete personal library.'],trash:['Trash','Recently removed books.']};
   function toast(message){const el=$('#toast');el.textContent=message;el.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3500)}
   function openDialog(title,html,eyebrow='LIRELO'){$('#dialogTitle').textContent=title;$('#dialogEyebrow').textContent=eyebrow;$('#dialogBody').innerHTML=html;$('#noticeDialog').showModal();}
   $('#dialogClose').addEventListener('click',()=>$('#noticeDialog').close());
@@ -46,14 +46,21 @@
   }
   function resumeMarkup(book){
     const progress = progressOf(book);
-    return `<article class="lr-resume">${bookCover(book)}<div class="lr-resume-copy"><p>Continue reading</p><h2>${safe(book.title)}</h2><span>${safe(book.author)}</span><progress value="${progress}" max="100" aria-label="Reading progress"></progress><small>${progress}% read</small></div><button type="button" class="lr-resume-button" data-lr-continue="${safe(book.id)}">Open book ${svg('arrow-right')}</button></article>`;
+    return `<article class="lr-resume">
+      <h2>Continue reading</h2>
+      <button class="room-resume-book" type="button" data-lr-continue="${safe(book.id)}" aria-label="Continue reading ${safe(book.title)}">
+        ${bookCover(book)}<span><strong>${safe(book.title)}</strong><small>${safe(book.author)}</small><span class="room-resume-progress">${progress}% read</span><progress value="${progress}" max="100" aria-label="Reading progress"></progress></span>
+        <span class="room-resume-arrow">${svg('arrow-right')}</span>
+      </button>
+    </article>`;
   }
   let previousResume = '';
   function renderResume(){
     const slot = $('#libraryResume');
     const book = state.section === 'library' && state.format === 'all' && !state.query && resumeBook();
-    slot.hidden = !book;
-    const markup = book ? resumeMarkup(book) : '';
+    slot.hidden = state.section !== 'library' || state.format !== 'all' || Boolean(state.query);
+    document.querySelector('.room-library-lead').hidden = slot.hidden;
+    const markup = book ? resumeMarkup(book) : `<article class="lr-resume room-no-resume"><div><h2>${state.books.length?'Pick a book to start reading':'Start your library'}</h2><p>${state.books.length?'Your current book will appear here.':'Import a PDF or EPUB to start reading.'}</p>${state.books.length?'':'<button type="button" data-room-import>Import books</button>'}</div></article>`;
     if (previousResume !== markup) {
       slot.innerHTML = markup;
       previousResume = markup;
@@ -62,10 +69,15 @@
   $('#libraryResume').addEventListener('click', event => {
     const button = event.target.closest('[data-lr-continue]');
     if (button) window.LireloReader?.open(button.dataset.lrContinue);
+    if (event.target.closest('[data-room-import]')) $('#addBooks').click();
   });
   function makeCard(book){
     const progress = progressOf(book);
-    return `<article class="book-card"><button type="button" class="book-open" data-open-book="${safe(book.id)}" aria-label="Details for ${safe(book.title)}"><div class="cover lr-card-cover">${bookCover(book)}</div><h3 class="book-title">${safe(book.title)}</h3><div class="book-metadata">${safe(book.author)}</div><div class="book-format">${safe(book.format.toUpperCase())} · ${book.pages?`${safe(book.pages)} pages · `:''}${progress}%</div><div class="progress" role="img" aria-label="${progress}% read"><div class="progress-bar" style="width:${progress}%"></div></div></button></article>`;
+    return `<article class="book-card"><button type="button" class="book-open" data-open-book="${safe(book.id)}" aria-label="Details for ${safe(book.title)}">
+      <div class="room-book-identity">${bookCover(book)}<div><h3 class="book-title">${safe(book.title)}</h3><span class="book-metadata">${safe(book.author)}</span></div></div>
+      <div class="book-format"><span>${safe(book.format.toUpperCase())}</span>${book.pages? `<small>${safe(book.pages)} pages</small>` : ''}</div>
+      <div class="room-book-progress"><span>${progress ? `${progress}% read` : 'Unread'}</span><progress value="${progress}" max="100" aria-label="${progress}% read"></progress></div>
+    </button></article>`;
   }
   function libraryList(){
     let filtered = state.books.slice();
@@ -127,7 +139,12 @@
   $$('.nav-link').forEach(el=>el.addEventListener('click',()=>{state.format='all';setSection(el.dataset.section)}));
   $$('.tab').forEach(el=>el.addEventListener('click',()=>{state.format=el.dataset.format;render()}));
   $('#sidebarSearch').addEventListener('input',e=>{state.query=e.target.value.trim().toLowerCase();state.format=state.format==='collections'?'all':state.format;if(!['library','reading','all'].includes(state.section))setSection('library');else render()});
-  const focusSearch=()=>{$('#sidebarSearch').focus();if(innerWidth<768)openMobile()};
+  const focusSearch=()=>{
+    if(window.LireloPhase4?.state?.active){$('#p4Search').focus();return}
+    if(window.LireloReader?.state?.active)return;
+    if($('#mainContent .content-width').classList.contains('hidden'))document.querySelector('.room-nav [data-room-route="library"]').click();
+    $('#sidebarSearch').focus();
+  };
   $('#searchShortcut').addEventListener('click',focusSearch);
   addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();focusSearch()}if(e.key==='Escape')closeMobile()});
   $('#brandHome').addEventListener('click',()=>setSection('library'));
