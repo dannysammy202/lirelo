@@ -201,7 +201,7 @@ async function signOut(){
  // Clear any cached data from this account so the next signer-in never sees it.
  for(const key of Object.keys(localStorage)){
   if(key.startsWith('lirelo-reader-v3-standalone:')||key.startsWith('lirelo-reader-progress:')||
-     ['lirelo-complete-profile-v1','lirelo-complete-preferences-v1','lirelo-complete-tags-v1','lirelo-complete-trash-v1',SESSION].includes(key)) localStorage.removeItem(key);
+     ['lirelo-last-open-book','lirelo-complete-profile-v1','lirelo-complete-preferences-v1','lirelo-complete-tags-v1','lirelo-complete-trash-v1',SESSION].includes(key)) localStorage.removeItem(key);
  }
  state.suppress=false;
  const token=state.session.access_token;state.session=null;state.user=null;state.ready=false;

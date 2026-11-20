@@ -118,7 +118,7 @@ function updateMeta(){if(!state.doc)return;updateFullscreenPage();
  const fraction=(state.page-1+state.offset)/Math.max(1,state.doc.pages);
  const pct=Math.round(clamp(fraction*100,0,100));$('#rrProgressFill').style.width=pct+'%';$('#rrProgressText').textContent=`${pct}% read`;
  $('#rrDocMetadata').textContent=`${state.doc.format.toUpperCase()} · ${state.doc.pages} ${state.doc.reflowable?'reading pages':'pages'}`;
- const b=lib.state.books.find(b=>b.id===state.book.id);if(b){b.progress=pct;try{localStorage.setItem('lirelo-reader-progress:'+b.id,String(pct))}catch{}window.LireloApp?.updateProgress(b.id,pct);lib.render()}
+ const b=lib.state.books.find(b=>b.id===state.book.id);if(b){b.progress=pct;try{localStorage.setItem('lirelo-reader-progress:'+b.id,String(pct));localStorage.setItem('lirelo-last-open-book',b.id)}catch{}window.LireloApp?.updateProgress(b.id,pct);lib.render()}
  $('#rrModeText').textContent=state.mode==='scroll'?'Scroll':'Swipe';$('#rrReadingMode').value=state.mode;
  $('#rrFontSize').value=state.font;$('#rrFontValue').textContent=state.font+' pt';$('#rrPageTone').value=state.tone;$('#rrFontFace').value=state.fontFace;
  $('#rrZoomOut').disabled=state.zoom<=75;$('#rrZoomIn').disabled=state.zoom>=(phone()?300:175);$('#rrPrevious').disabled=state.page<=1;$('#rrNext').disabled=state.page>=state.doc.pages;

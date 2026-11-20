@@ -28,8 +28,7 @@
       chapters:(b.toc||[]).map(t=>[t.title,t.page]),notes:saved.notes||[],highlights:saved.highlights||[]};
   }
   function iconise(root){root.querySelectorAll('[data-icon]').forEach(n=>n.innerHTML=svg(n.dataset.icon))}
-  function coverHTML(b){return `<div class="cover" data-cover="${safe(b.cover)}"><span class="cover-top">${safe(b.cover==='uploaded'?b.format.toUpperCase():b.author)}</span><strong class="cover-title">${safe(b.title)}</strong><span class="cover-motif" aria-hidden="true"></span><span class="cover-author">${safe(b.author)}</span></div>`}
-  function syncHeader(b){$('.toolbar-title').textContent=b?'Book details':'Library';$('.toolbar-detail').textContent=b?b.title:'Your reading, all together.'}
+    function syncHeader(b){$('.toolbar-title').textContent=b?'Book details':'Library';$('.toolbar-detail').textContent=b?b.title:'Your reading, all together.'}
   function open(id,{pushHistory=true}={}){
     const b=state.books.find(x=>x.id===id);
     if(!b)return;
@@ -57,7 +56,7 @@
   }
   function fillDetails(){
     const b=book(),d=data();if(!b)return;
-    $('#detailsCover').innerHTML=coverHTML(b);
+    $('#detailsCover').innerHTML=lib.bookCover(b);
     $('#detailsTitle').textContent=b.title;
     $('#detailsAuthor').textContent='by '+b.author;
     $('#detailsKind').textContent=(b.format||'BOOK').toUpperCase()+' · PERSONAL LIBRARY';

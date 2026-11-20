@@ -1,5 +1,5 @@
 
-/* Lirelo clean rebuild: Library and Book Details design proof. No existing data is read or modified. */
+/* Lirelo library views and controls. */
 (() => {
   'use strict';
   const $ = selector => document.querySelector(selector);
@@ -8,17 +8,9 @@
   const svg = name => window.LireloIconsax.svg(name);
   $$('[data-icon]').forEach(node => node.innerHTML = svg(node.dataset.icon));
   const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const sampleBooks = [
-    {id:'everyday',title:'The Design of Everyday Things',author:'Don Norman',format:'pdf',pages:368,progress:0,cover:'everyday',collection:'Learning',tags:['Design','Psychology'],added:6},
-    {id:'thinking',title:'Thinking, Fast and Slow',author:'Daniel Kahneman',format:'epub',pages:499,progress:49,cover:'thinking',collection:'Personal',tags:['Psychology'],added:5},
-    {id:'clean',title:'Clean Code',author:'Robert C. Martin',format:'pdf',pages:464,progress:22,cover:'clean',collection:'Work',tags:['Engineering'],added:4},
-    {id:'deep',title:'Deep Work',author:'Cal Newport',format:'epub',pages:296,progress:0,cover:'deep',collection:'Personal',tags:['Focus'],added:3},
-    {id:'atomic',title:'Atomic Habits',author:'James Clear',format:'epub',pages:320,progress:58,cover:'atomic',collection:'Favourites',tags:['Habits'],added:2},
-    {id:'pragmatic',title:'The Pragmatic Programmer',author:'David Thomas & Andrew Hunt',format:'pdf',pages:352,progress:0,cover:'pragmatic',collection:'Work',tags:['Engineering'],added:1}
-  ];
   const state = {books:[],section:'library',format:'all',query:'',sort:'recent',layout:'grid',collections:['Personal','Work','Learning','Favourites'],newId:0};
   let toastTimer;
-  const labels = {library:['Library','Your books, beautifully organised.'],reading:['Reading Now','Pick up where you left off.'],highlights:['Highlights','Passages worth remembering.'],bookmarks:['Bookmarks','The pages you want to return to.'],notes:['Notes','Your thoughts and ideas, together.'],tags:['Tags','Find books by topic.'],all:['All Books','Your complete personal library.'],trash:['Trash','Recently removed books.']};
+  const labels = {library:['Library',''],reading:['Reading now','Pick up where you left off.'],highlights:['Highlights','Passages worth remembering.'],bookmarks:['Bookmarks','The pages you want to return to.'],notes:['Notes','Your thoughts and ideas, together.'],tags:['Tags','Find books by topic.'],all:['All books','Your complete personal library.'],trash:['Trash','Recently removed books.']};
   function toast(message){const el=$('#toast');el.textContent=message;el.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3500)}
   function openDialog(title,html,eyebrow='LIRELO'){$('#dialogTitle').textContent=title;$('#dialogEyebrow').textContent=eyebrow;$('#dialogBody').innerHTML=html;$('#noticeDialog').showModal();}
   $('#dialogClose').addEventListener('click',()=>$('#noticeDialog').close());
@@ -38,9 +30,42 @@
   });
   $('#noticeDialog').addEventListener('close',()=>{$('#noticeDialog').dataset.action='';$('#dialogDone').textContent='Got it'});
   $('#noticeDialog').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+  function progressOf(book){
+    return Math.max(0, Math.min(100, Math.round(Number(book.progress) || 0)));
+  }
+  function bookCover(book){
+    const title = String(book.title || '');
+    const artwork = Array.from(title).reduce((sum, letter) => sum + letter.codePointAt(0), 0) % 5;
+    return `<div class="lr-jacket" data-artwork="${artwork}" aria-hidden="true"><strong>${safe(title)}</strong><i></i><small>${safe(book.author)}</small></div>`;
+  }
+  function resumeBook(){
+    const inProgress = state.books.filter(book => !book.trashed && progressOf(book) > 0 && progressOf(book) < 100);
+    let lastId;
+    try { lastId = localStorage.getItem('lirelo-last-open-book'); } catch {}
+    return inProgress.find(book => book.id === lastId) || inProgress.sort((a,b) => b.added - a.added)[0];
+  }
+  function resumeMarkup(book){
+    const progress = progressOf(book);
+    return `<article class="lr-resume">${bookCover(book)}<div class="lr-resume-copy"><p>Continue reading</p><h2>${safe(book.title)}</h2><span>${safe(book.author)}</span><progress value="${progress}" max="100" aria-label="Reading progress"></progress><small>${progress}% read</small></div><button type="button" class="lr-resume-button" data-lr-continue="${safe(book.id)}">Open book ${svg('arrow-right')}</button></article>`;
+  }
+  let previousResume = '';
+  function renderResume(){
+    const slot = $('#libraryResume');
+    const book = state.section === 'library' && state.format === 'all' && !state.query && resumeBook();
+    slot.hidden = !book;
+    const markup = book ? resumeMarkup(book) : '';
+    if (previousResume !== markup) {
+      slot.innerHTML = markup;
+      previousResume = markup;
+    }
+  }
+  $('#libraryResume').addEventListener('click', event => {
+    const button = event.target.closest('[data-lr-continue]');
+    if (button) window.LireloReader?.open(button.dataset.lrContinue);
+  });
   function makeCard(book){
-    const progress = Math.max(0,Math.min(100,Number(book.progress)||0));
-    return `<article class="book-card"><button type="button" class="book-open" data-open-book="${safe(book.id)}" aria-label="Details for ${safe(book.title)}"><div class="cover" data-cover="${safe(book.cover)}"><span class="cover-top">${safe(book.cover === 'uploaded' ? book.format.toUpperCase() : book.author)}</span><strong class="cover-title">${safe(book.title)}</strong><span class="cover-motif" aria-hidden="true"></span><span class="cover-author">${safe(book.author)}</span></div><h3 class="book-title">${safe(book.title)}</h3><div class="book-metadata">${safe(book.author)}</div><div class="book-format">${safe(book.format.toUpperCase())} · ${book.pages?`${safe(book.pages)} pages · `:''}${progress}%</div><div class="progress" role="img" aria-label="${progress}% read"><div class="progress-bar" style="width:${progress}%"></div></div></button></article>`;
+    const progress = progressOf(book);
+    return `<article class="book-card"><button type="button" class="book-open" data-open-book="${safe(book.id)}" aria-label="Details for ${safe(book.title)}"><div class="cover lr-card-cover">${bookCover(book)}</div><h3 class="book-title">${safe(book.title)}</h3><div class="book-metadata">${safe(book.author)}</div><div class="book-format">${safe(book.format.toUpperCase())} · ${book.pages?`${safe(book.pages)} pages · `:''}${progress}%</div><div class="progress" role="img" aria-label="${progress}% read"><div class="progress-bar" style="width:${progress}%"></div></div></button></article>`;
   }
   function libraryList(){
     let filtered = state.books.slice();
@@ -59,7 +84,7 @@
     state.section=value;
     if(value==='all'||value==='library'){state.format='all';}
     $('#viewTitle').textContent=value.startsWith('collection:')?value.slice(11):(labels[value]?.[0]||'Library');
-    $('#viewSubtitle').textContent=value.startsWith('collection:')?'Books in this collection.':(labels[value]?.[1]||'Your books, beautifully organised.');
+    $('#viewSubtitle').textContent=value.startsWith('collection:')?'Books in this collection.':(labels[value]?.[1]||'');
     const librarySections=['library','reading','all','trash'];
     $('#formatTabs').classList.toggle('hidden',!librarySections.includes(value)&&!value.startsWith('collection:'));
     $$('.nav-link').forEach(b=>{const active=b.dataset.section===value||(value.startsWith('collection:')&&b.dataset.section==='library');b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
@@ -74,14 +99,18 @@
   function renderCollectionsNav(){const el=$('#collectionNav');el.replaceChildren();state.collections.forEach(name=>{const button=document.createElement('button');button.type='button';button.className='nav-collection';button.dataset.collection=name;button.innerHTML=`${svg('folder')}<span>${safe(name)}</span><span class="collection-count">${state.books.filter(b=>b.collection===name).length}</span>`;button.addEventListener('click',()=>setSection('collection:'+name));el.append(button)});}
   function render(){
     coverCounts();
+    renderResume();
     $$('.tab').forEach(b=>{const active=b.dataset.format===state.format;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
     const books=libraryList(),special=['highlights','bookmarks','notes','tags'].includes(state.section);
     const collections=state.format==='collections';
     $('#collectionsPanel').classList.toggle('hidden',!collections&&!special);
     $('.shelf').classList.toggle('hidden',collections||special);
-    $('#sectionRight').classList.toggle('hidden',state.section==='trash');
-    $('#shelfTitle').textContent=state.section==='reading'?'Continue reading':state.section==='trash'?'Trash':state.section.startsWith('collection:')?state.section.slice(11):state.query?'Search results':'Your books';
-    $('#resultCount').textContent=books.length===1?'1 book':`${books.length} books`;
+    $('.library-shelf-heading').classList.toggle('hidden',special);
+    $('.library-controls-actions').classList.toggle('hidden',collections || special);
+    $('#viewToggle').setAttribute('aria-pressed',String(state.layout==='grid'));
+    $('#listView').setAttribute('aria-pressed',String(state.layout==='list'));
+    $('#shelfTitle').textContent=state.section==='reading'?'Continue reading':state.section==='trash'?'Trash':state.section.startsWith('collection:')?state.section.slice(11):state.query?'Search results':collections?'Collections':'Your books';
+    $('#resultCount').textContent=collections?'':books.length===1?'1 book':`${books.length} books`;
     $('#bookGrid').innerHTML=books.map(makeCard).join('');
     $('#emptyState').classList.toggle('hidden',books.length!==0);
     $('#emptyExplanation').textContent=state.section==='trash'?'No books in Trash.':state.query?'Try a different search.':state.section==='reading'?'Books with reading progress appear here.':'No books here yet. Add a PDF or EPUB to start reading.';
@@ -126,8 +155,16 @@
     $('#dialogDone').textContent='Create collection';
     const input=$('#collectionNameInput');input.focus();input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#dialogDone').click()}});
   });
-  $('#sortButton').addEventListener('click',()=>{state.sort=state.sort==='recent'?'title':state.sort==='title'?'progress':'recent';$('#sectionRight').innerHTML=`Sort: ${state.sort==='recent'?'Recently added':state.sort==='title'?'Title A–Z':'Reading progress'} ${svg('chevron-down')}`;render()});
-  $('#viewToggle').addEventListener('click',()=>{state.layout=state.layout==='grid'?'list':'grid';$('#viewToggle').innerHTML=svg(state.layout==='grid'?'layout-grid':'layout-list');$('#viewToggle').setAttribute('aria-label',state.layout==='grid'?'Switch to list view':'Switch to grid view');render()});
+  $('#sortButton').addEventListener('change', event => {
+    state.sort = event.target.value;
+    render();
+  });
+  for (const [id, layout] of [['viewToggle','grid'],['listView','list']]) {
+    $(`#${id}`).addEventListener('click', () => {
+      state.layout = layout;
+      render();
+    });
+  }
   const profile=()=>window.LireloFinal?.enter('account');
   $('#profileButton').addEventListener('click',profile);$('#topProfile').addEventListener('click',profile);
   $('#sidebarCollapse').addEventListener('click',()=>document.querySelector('.sidebar')?.classList.toggle('is-compact'));
@@ -136,7 +173,7 @@
   $('#mobileMenu').addEventListener('click',openMobile);$('#navScrim').addEventListener('click',closeMobile);
   // Rename toolbar element via lookup, avoiding an accidental missing-ID reference.
   $('.toolbar-title').id='toolbarTitle';
-  window.LireloLibrary = {state,render,setSection,safe,svg,toast,openDialog,renderCollectionsNav,closeMobile};
+  window.LireloLibrary = {state,render,setSection,safe,svg,toast,openDialog,renderCollectionsNav,closeMobile,bookCover,resumeBook,resumeMarkup};
   renderCollectionsNav();render();
 })();
 
