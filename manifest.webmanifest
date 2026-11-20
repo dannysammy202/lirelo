@@ -1,28 +1,15 @@
 {
-  "name": "Lirelo — Your Reading Space",
+  "name": "Lirelo",
   "short_name": "Lirelo",
-  "description": "A calm space for your books, highlights and reading progress.",
+  "description": "Your personal library for PDFs, EPUBs and saved passages.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F7F7F2",
-  "theme_color": "#273E34",
-  "orientation": "any",
+  "background_color": "#fcfaf6",
+  "theme_color": "#271976",
   "icons": [
     {
-      "src": "/assets/lirelo-app-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/assets/lirelo-app-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/lirelo-app-icon.svg",
+      "src": "/assets/folio-mark.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
