@@ -150,7 +150,7 @@
     state.query='';$('#sidebarSearch').value='';state.format='all';setSection('library');renderCollectionsNav();
   });
   $('#newCollection').addEventListener('click',()=>{
-    openDialog('New collection','<label class="field-label" for="collectionNameInput">Collection name</label><input class="field-input" id="collectionNameInput" type="text" maxlength="45" placeholder="e.g. Design studies" autocomplete="off"><p>Collections organise books in your local library.</p>','ORGANISE YOUR BOOKS');
+    openDialog('New collection','<label class="field-label" for="collectionNameInput">Collection name</label><input class="field-input" id="collectionNameInput" type="text" maxlength="45" placeholder="e.g. Design studies" autocomplete="off"><p>Collections group books in your library.</p>','ORGANISE YOUR BOOKS');
     $('#noticeDialog').dataset.action='createCollection';
     $('#dialogDone').textContent='Create collection';
     const input=$('#collectionNameInput');input.focus();input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#dialogDone').click()}});

@@ -206,7 +206,7 @@ async function open(id,{page=null,pushHistory=true}={}){
  $('#readerScreen').classList.remove('hidden');$('#app').classList.add('reader-open');$('#detailsScreen').classList.add('hidden');$('.content-width').classList.add('hidden');
  screen.classList.remove('panel-open');$('#rrSettings').classList.add('hidden');$('#rrSearchbar').classList.add('hidden');$('#rrSelectBar').classList.add('hidden');
  canvas.innerHTML='<div class="rr-loading">Opening your document...</div>';lib.closeMobile();
- $('#rrBookTitle').textContent=b.title;$('#rrBookSubtitle').textContent='Preparing local reader';
+ $('#rrBookTitle').textContent=b.title;$('#rrBookSubtitle').textContent='Opening book';
  try{
   const d=await getDocument(b);if(open.token!==token)return;
   state.doc=d;screen.classList.toggle('rr-phone-epub',phone()&&d.layout?.startsWith('mobile'));loadStored();updateOfflineButton();if(page!=null)state.page=clamp(Number(page)||1,1,d.pages);

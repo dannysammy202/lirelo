@@ -192,7 +192,7 @@
   $('#removeClose').addEventListener('click',()=>$('#removeBookDialog').close());
   $('#removeCancel').addEventListener('click',()=>$('#removeBookDialog').close());
   $('#removeBookDialog').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
-  $('#removeConfirm').addEventListener('click',()=>{const index=state.books.findIndex(b=>b.id===removeId);$('#removeBookDialog').close();if(index<0)return;state.books.splice(index,1);removeId=null;resetAfterRemove()});
+  $('#removeConfirm').addEventListener('click',()=>{const index=state.books.findIndex(b=>b.id===removeId);$('#removeBookDialog').close();if(index<0)return;const [book]=state.books.splice(index,1);const trash=window.LireloFinal.trash;trash.unshift(book);window.LireloApp.syncTrash(trash);removeId=null;resetAfterRemove()});
   window.addEventListener('popstate',()=>{const match=location.hash.match(/^#book=(.+)$/);if(match){const id=decodeURIComponent(match[1]);if(id!==activeId)open(id,{pushHistory:false})}else close()});
   if(location.hash.startsWith('#book=')){const id=decodeURIComponent(location.hash.slice(6));if(state.books.some(b=>b.id===id))open(id,{pushHistory:false})}
   // Original app.js renders nav icons at startup. The new detail-only icons are mounted here.
